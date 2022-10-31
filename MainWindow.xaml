@@ -10,21 +10,27 @@
         <DataTemplate x:Key="Actions">
             <StackPanel Orientation="Horizontal">
                 <Button Content="Convert" Command="{Binding Path=ConvertCommand}"/>
+                <Button Content="Toggle" Command="{Binding Path=ToggleWindowCommand}"/>
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
     <Grid>
-        <Button Content="Refresh" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="25" Width="71" Click="Button_Click"/>
-        <ListView ItemsSource="{Binding Files}" Margin="10,40,0,10" HorizontalAlignment="Left" Width="532">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="File" Width="300"/>
-                    <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Path=Status}" Width="100"/>
-                    <GridViewColumn Header="Actions" CellTemplate="{StaticResource Actions}"/>
-                </GridView>
-            </ListView.View>
-        </ListView>
-        <TextBox Margin="547,40,10,10" TextWrapping="Wrap" Text="{Binding Logs}"/>
+        <DockPanel>
+            <TextBox DockPanel.Dock="Right" Width="300" Margin="10,10,10,10" TextWrapping="Wrap" Text="{Binding Logs}"/>
+            <Grid>
+                <Button Content="Refresh" Command="{Binding Path=RefreshCommand}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
+                <ListView ItemsSource="{Binding Files}" Margin="10,40,0,10">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="File" Width="300"/>
+                            <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Path=Status}" Width="100"/>
+                            <GridViewColumn Header="Actions" CellTemplate="{StaticResource Actions}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>
+        </DockPanel>
+
     </Grid>
 
 </Window>

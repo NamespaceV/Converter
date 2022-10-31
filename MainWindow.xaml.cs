@@ -5,31 +5,52 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
+using System.IO;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Converter
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
+    public static class Constants {
+        public static DirectoryInfo baseDir = new DirectoryInfo(@"C:\NetworkShare");
+    }
+
     public partial class MainWindow : Window, INotifyPropertyChanged,  ILogger
     {
-        private const string basePath = @"C:\NetworkShare\INPUT30";
+        private List<int> supportedFPS = new List<int>() { 30, 60};
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public List<VideoFileVM> Files { get; set; } = new List<VideoFileVM>();
         public string Logs { get; set; } = "asdf";
+        public ICommand RefreshCommand { get; set; }
 
         public MainWindow()
         {
             InitializeComponent();
             DataContext = this;
-            Files.Add(new VideoFileVM("asd", this));
+            Files.Add(new VideoFileVM(new FileInfo("asd"),45, this));
+            RefreshCommand = new SimpleCommand(RefreshList);
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void RefreshList()
         {
-            Files = System.IO.Directory.EnumerateFiles(basePath).Select(f => new VideoFileVM(f, this)).ToList();
+            var newFiles = new List<VideoFileVM>();
+            var oldFiles = Files;
+            foreach (var fps in supportedFPS) {
+                var files = Constants.baseDir.EnumerateDirectories()
+                    .Single(d => d.Name.ToLowerInvariant() == "input" + fps.ToString())
+                    .EnumerateFiles();
+                foreach (var f in files) {
+                    var match = oldFiles.Find(of => of.Matches(f));
+                    if (match != null) {
+                        newFiles.Add(match);
+                    } else {
+                        newFiles.Add(new VideoFileVM(f, fps, this));
+                    }
+                }
+            }
+            Files = newFiles;
             OnPropertyChanged(nameof(Files));
         }
 
@@ -58,31 +79,85 @@ namespace Converter
     }
 
     public class VideoFileVM: INotifyPropertyChanged {
-        private string path;
+        private FileInfo fileInfo;
+        private readonly int fps;
         private readonly ILogger logger;
+        private Process runningProcess;
+        private bool windowHidden;
+
+
         public string Status { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ICommand ConvertCommand { get; private set; }
+        public ICommand ToggleWindowCommand { get; private set; }
 
-        public VideoFileVM(string path, ILogger logger)
+        public VideoFileVM(FileInfo path, int fps, ILogger logger)
         {
-            this.path = path;
+            this.fileInfo = path;
+            this.fps = fps;
             this.logger = logger;
             ConvertCommand = new SimpleCommand(Convert);
+            ToggleWindowCommand = new SimpleCommand(ToggleWindow);
             Status = "Found";
+            if (File.Exists(GetOutputFilePath())) {
+                Status = "Done";
+            }
+        }
+
+        private string GetOutputFilePath() {
+            var outDir = Constants.baseDir.EnumerateDirectories().Single(d => d.Name.ToLowerInvariant() == "output").FullName;
+            return Path.Combine(outDir, Path.GetFileNameWithoutExtension(fileInfo.Name) + ".webm");
         }
 
         private void Convert()
         {
-            logger.Log($"Converting {path}");
-            Status = "Converting...";
+            var outName = GetOutputFilePath();
+            logger.Log($"Converting {fileInfo.FullName} -> {outName}");
+            var binaryPath = Constants.baseDir.GetFiles().Single(f => f.Name == "ffmpeg.exe").FullName;
+            var args = $"-i {fileInfo.FullName}"+
+                $" -c:a libopus -b:a 64k -c:v libsvtav1 -crf 60"+
+                $" -pix_fmt yuv420p10le -g {fps * 50} -preset 4 -svtav1-params tune=0 -r {fps}"+
+                $" {outName}";
+            var info = new ProcessStartInfo(binaryPath, args);
+            runningProcess = Process.Start(info);
+            runningProcess.Exited += (e,a) => { OnConvertFinished(); };
+            runningProcess.PriorityClass = ProcessPriorityClass.Idle;
+            ToggleWindow();
+            Status = "Running...";
+            OnPropertyChanged(nameof(Status));
+        }
+
+        [DllImport("User32")]
+        private static extern int ShowWindow(int hwnd, int nCmdShow);
+        private const int SW_HIDE = 0;
+        private const int SW_SHOW = 5;
+
+        private void ToggleWindow() {
+            if (runningProcess?.MainWindowHandle == null) {
+                return;
+            }
+            windowHidden = !windowHidden;
+            ShowWindow(runningProcess.MainWindowHandle.ToInt32(), windowHidden ? SW_SHOW : SW_HIDE);
+        }
+
+        public void OnConvertFinished() {
+            Status = "Done";
             OnPropertyChanged(nameof(Status));
         }
 
         public override string ToString() {
-            return path;
+            var state = GetStateName();
+            return $"{state} {fps} -> {fileInfo.Name}";
+        }
+
+        private string GetStateName()
+        {
+            if (runningProcess == null) { return ""; }
+            if (!runningProcess.HasExited) { return "running"; }
+            if (runningProcess.HasExited) { return "done"; }
+            return "unknown";
         }
 
         protected void OnPropertyChanged([CallerMemberName] string name = null)
@@ -90,6 +165,10 @@ namespace Converter
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
+        internal bool Matches(FileInfo f)
+        {
+            return fileInfo.FullName == f.FullName;
+        }
     }
 
     public class SimpleCommand : ICommand
