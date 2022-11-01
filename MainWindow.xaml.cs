@@ -91,7 +91,7 @@ namespace Converter
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ICommand ConvertCommand { get; private set; }
-        public ICommand ToggleWindowCommand { get; private set; }
+        public SimpleCommand ToggleWindowCommand { get; private set; }
 
         public VideoFileVM(FileInfo path, int fps, ILogger logger)
         {
@@ -104,6 +104,7 @@ namespace Converter
             if (File.Exists(GetOutputFilePath())) {
                 Status = "Done";
             }
+            ToggleWindowCommand.SetEnabled(false);
         }
 
         private string GetOutputFilePath() {
@@ -126,6 +127,7 @@ namespace Converter
             runningProcess.PriorityClass = ProcessPriorityClass.Idle;
             ToggleWindow();
             Status = "Running...";
+            ToggleWindowCommand.SetEnabled(true);
             OnPropertyChanged(nameof(Status));
         }
 
@@ -136,28 +138,23 @@ namespace Converter
 
         private void ToggleWindow() {
             if (runningProcess?.MainWindowHandle == null) {
+                logger.Log("TOGGLE - Failed - No handle.");
                 return;
             }
             windowHidden = !windowHidden;
-            ShowWindow(runningProcess.MainWindowHandle.ToInt32(), windowHidden ? SW_SHOW : SW_HIDE);
+            var handle = runningProcess.MainWindowHandle.ToInt32();
+            logger.Log($"TOGGLE - windowHidden = {windowHidden} handle = {handle}.");
+            ShowWindow(handle, windowHidden ? SW_SHOW : SW_HIDE);
         }
 
         public void OnConvertFinished() {
             Status = "Done";
+            ToggleWindowCommand.SetEnabled(false);
             OnPropertyChanged(nameof(Status));
         }
 
         public override string ToString() {
-            var state = GetStateName();
-            return $"{state} {fps} -> {fileInfo.Name}";
-        }
-
-        private string GetStateName()
-        {
-            if (runningProcess == null) { return ""; }
-            if (!runningProcess.HasExited) { return "running"; }
-            if (runningProcess.HasExited) { return "done"; }
-            return "unknown";
+            return $"{fps} -> {fileInfo.Name}";
         }
 
         protected void OnPropertyChanged([CallerMemberName] string name = null)
@@ -174,22 +171,33 @@ namespace Converter
     public class SimpleCommand : ICommand
     {
         private readonly Action lambda;
+        private bool enabled;
 
-        public event EventHandler CanExecuteChanged;
+        public event EventHandler CanExecuteChanged
+        {
+            add { CommandManager.RequerySuggested += value; }
+            remove { CommandManager.RequerySuggested -= value; }
+        }
 
         public SimpleCommand(Action lambda)
         {
             this.lambda = lambda;
+            enabled = true;
         }
 
         public bool CanExecute(object parameter)
         {
-            return true;
+            return enabled;
         }
 
         public void Execute(object parameter)
         {
             lambda.Invoke();
+        }
+
+        public void SetEnabled(bool enabled) {
+            if (this.enabled == enabled) return;
+            this.enabled = enabled;
         }
     }
 }
