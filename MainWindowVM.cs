@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Input;
 
 namespace Converter
@@ -14,12 +16,20 @@ namespace Converter
 
         public List<VideoFileVM> Files { get; set; } = new List<VideoFileVM>();
         public string Logs { get; set; } = "Logs:";
-        public ICommand RefreshCommand { get; set; }
+        public ICommand RefreshCommand { get; private set; }
+        public ICommand AboutCommand { get; private set; }
 
         public MainWindowVM() 
         {
             RefreshCommand = new SimpleCommand(RefreshList);
+            AboutCommand = new SimpleCommand(ShowAbout);
             RefreshList();
+        }
+
+        private void ShowAbout()
+        {
+            var aboutText = "Video format converter (opinionated ffmpeg runner)" + "\n\"Replace icon\" by Icons8 (icons8.com)";
+            MessageBox.Show(aboutText, "About");
         }
 
         private void RefreshList()
