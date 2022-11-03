@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Windows.Input;
 using System.IO;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -52,11 +51,15 @@ namespace Converter
                 $" -c:a libopus -b:a 64k -c:v libsvtav1 -crf 60"+
                 $" -pix_fmt yuv420p10le -g {fps * 50} -preset 4 -svtav1-params tune=0 -r {fps}"+
                 $" {outName}";
+            //binaryPath = "notepad";
+            //args = "";
             var info = new ProcessStartInfo(binaryPath, args);
+            info.RedirectStandardError = true;
             runningProcess = Process.Start(info);
-            runningProcess.Exited += (e,a) => { OnConvertFinished(); };
+            runningProcess.EnableRaisingEvents = true;
+            runningProcess.Exited += (e,a) => { 
+                OnConvertFinished(e as Process); };
             runningProcess.PriorityClass = ProcessPriorityClass.Idle;
-            ToggleWindow();
             Status = "Running...";
             ConvertCommand.SetEnabled(false);
             ToggleWindowCommand.SetEnabled(true);
@@ -73,15 +76,25 @@ namespace Converter
                 logger.Log("TOGGLE - Failed - No handle.");
                 return;
             }
-            windowHidden = !windowHidden;
             var handle = runningProcess.MainWindowHandle.ToInt32();
-            logger.Log($"TOGGLE - windowHidden = {windowHidden} handle = {handle}.");
+            logger.Log($"TOGGLE - windowHidden = {!windowHidden} handle = {handle}.");
             ShowWindow(handle, windowHidden ? SW_SHOW : SW_HIDE);
+            windowHidden = !windowHidden;
         }
 
-        public void OnConvertFinished() {
-            Status = "Done";
-            ToggleWindowCommand.SetEnabled(false);
+        public void OnConvertFinished(Process p) {
+            if (p.ExitCode == 0) {
+                Status = "Done";
+                ToggleWindowCommand.SetEnabled(false);
+            }
+            else
+            {
+                Status = "Failed";
+                logger.Log($"Error: exit code {p.ExitCode} when processing {fileInfo.Name}");
+                logger.Log(p.StandardError.ReadToEnd());
+                ToggleWindowCommand.SetEnabled(false);
+                ConvertCommand.SetEnabled(true);
+            }
             OnPropertyChanged(nameof(Status));
         }
 

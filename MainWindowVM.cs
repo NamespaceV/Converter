@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using System.IO;
 
 namespace Converter
 {
@@ -14,13 +13,13 @@ namespace Converter
         public event PropertyChangedEventHandler PropertyChanged;
 
         public List<VideoFileVM> Files { get; set; } = new List<VideoFileVM>();
-        public string Logs { get; set; } = "asdf";
+        public string Logs { get; set; } = "Logs:";
         public ICommand RefreshCommand { get; set; }
 
-        public MainWindowVM() { 
-        
-            Files.Add(new VideoFileVM(new FileInfo("asd"), 45, this));
+        public MainWindowVM() 
+        {
             RefreshCommand = new SimpleCommand(RefreshList);
+            RefreshList();
         }
 
         private void RefreshList()
