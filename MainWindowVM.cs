@@ -47,6 +47,7 @@ namespace Converter
                     if (match != null)
                     {
                         newFiles.Add(match);
+                        match.Refresh();
                     }
                     else
                     {

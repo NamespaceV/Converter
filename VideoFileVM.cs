@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.IO;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System;
 
 namespace Converter
 {
@@ -29,12 +30,7 @@ namespace Converter
             this.logger = logger;
             ConvertCommand = new SimpleCommand(Convert);
             ToggleWindowCommand = new SimpleCommand(ToggleWindow);
-            Status = "Found";
-            if (File.Exists(GetOutputFilePath())) {
-                Status = "Done";
-                ConvertCommand.SetEnabled(false);
-            }
-            ToggleWindowCommand.SetEnabled(false);
+            Refresh();
         }
 
         private string GetOutputFilePath() {
@@ -54,7 +50,7 @@ namespace Converter
             //binaryPath = "notepad";
             //args = "";
             var info = new ProcessStartInfo(binaryPath, args);
-            info.RedirectStandardError = true;
+            //info.RedirectStandardError = true;
             runningProcess = Process.Start(info);
             runningProcess.EnableRaisingEvents = true;
             runningProcess.Exited += (e,a) => { 
@@ -64,6 +60,28 @@ namespace Converter
             ConvertCommand.SetEnabled(false);
             ToggleWindowCommand.SetEnabled(true);
             OnPropertyChanged(nameof(Status));
+        }
+
+        internal void Refresh()
+        {
+            if (Status == "Running...") { return; }
+            Status = "Found";
+            ConvertCommand.SetEnabled(true);
+            ToggleWindowCommand.SetEnabled(true);
+            var outPath = GetOutputFilePath();
+            if (File.Exists(outPath))
+            {
+                if (new FileInfo(outPath).Length == 0L)
+                {
+                    Status = "Corrupted/Ongoing";
+                }
+                else
+                {
+                    Status = "Done";
+                    ConvertCommand.SetEnabled(false);
+                }
+            }
+            ToggleWindowCommand.SetEnabled(false);
         }
 
         [DllImport("User32")]
@@ -91,7 +109,7 @@ namespace Converter
             {
                 Status = "Failed";
                 logger.Log($"Error: exit code {p.ExitCode} when processing {fileInfo.Name}");
-                logger.Log(p.StandardError.ReadToEnd());
+                //logger.Log(p.StandardError.ReadToEnd());
                 ToggleWindowCommand.SetEnabled(false);
                 ConvertCommand.SetEnabled(true);
             }
