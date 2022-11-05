@@ -4,10 +4,17 @@ using System.Runtime.CompilerServices;
 using System.IO;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System;
 
 namespace Converter
 {
+    public enum FileStatus { 
+        Found,
+        Running,
+        Done,
+        Failed,
+        CorruptedOrNotTracked,
+    }
+
     public class VideoFileVM: INotifyPropertyChanged {
         private FileInfo fileInfo;
         private readonly int fps;
@@ -16,7 +23,7 @@ namespace Converter
         private bool windowHidden;
 
 
-        public string Status { get; set; }
+        public FileStatus Status { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -42,30 +49,58 @@ namespace Converter
         {
             var outName = GetOutputFilePath();
             logger.Log($"Converting {fileInfo.FullName} -> {outName}");
-            var binaryPath = Constants.baseDir.GetFiles().Single(f => f.Name == "ffmpeg.exe").FullName;
-            var args = $"-i {fileInfo.FullName}"+
-                $" -c:a libopus -b:a 64k -c:v libsvtav1 -crf 60"+
-                $" -pix_fmt yuv420p10le -g {fps * 50} -preset 4 -svtav1-params tune=0 -r {fps}"+
-                $" {outName}";
-            //binaryPath = "notepad";
-            //args = "";
-            var info = new ProcessStartInfo(binaryPath, args);
-            //info.RedirectStandardError = true;
-            runningProcess = Process.Start(info);
-            runningProcess.EnableRaisingEvents = true;
-            runningProcess.Exited += (e,a) => { 
-                OnConvertFinished(e as Process); };
-            runningProcess.PriorityClass = ProcessPriorityClass.Idle;
-            Status = "Running...";
+            runningProcess = StartConversionProcess(outName);
+            Status = FileStatus.Running;
             ConvertCommand.SetEnabled(false);
             ToggleWindowCommand.SetEnabled(true);
             OnPropertyChanged(nameof(Status));
         }
 
+        private Process StartConversionProcess(string outName)
+        {
+            var binaryPath = Constants.baseDir.GetFiles().Single(f => f.Name == "ffmpeg.exe").FullName;
+            var args = $"-i {fileInfo.FullName}" +
+                $" -c:a libopus -b:a 64k -c:v libsvtav1 -crf 60" +
+                $" -pix_fmt yuv420p10le -g {fps * 50} -preset 4 -svtav1-params tune=0 -r {fps}" +
+                $" {outName}";
+            //binaryPath = "notepad";
+            //args = "";
+            var info = new ProcessStartInfo(binaryPath, args);
+            //info.RedirectStandardError = true;
+            var newProcess = Process.Start(info);
+            newProcess.EnableRaisingEvents = true;
+            newProcess.Exited += (e, a) =>
+            {
+                OnConvertFinished(e as Process);
+            };
+            newProcess.PriorityClass = ProcessPriorityClass.Idle;
+            return newProcess;
+        }
+
+        public void OnConvertFinished(Process p)
+        {
+            if (p.ExitCode == 0)
+            {
+                Status = FileStatus.Done;
+                string destFileName = fileInfo.FullName.Replace("input", "done", System.StringComparison.InvariantCultureIgnoreCase);
+                File.Move(fileInfo.FullName, destFileName);
+                ToggleWindowCommand.SetEnabled(false);
+            }
+            else
+            {
+                Status = FileStatus.Failed;
+                logger.Log($"Error: exit code {p.ExitCode} when processing {fileInfo.Name}");
+                //logger.Log(p.StandardError.ReadToEnd());
+                ToggleWindowCommand.SetEnabled(false);
+                ConvertCommand.SetEnabled(true);
+            }
+            OnPropertyChanged(nameof(Status));
+        }
+
         internal void Refresh()
         {
-            if (Status == "Running...") { return; }
-            Status = "Found";
+            if (Status == FileStatus.Running) { return; }
+            Status = FileStatus.Found;
             ConvertCommand.SetEnabled(true);
             ToggleWindowCommand.SetEnabled(true);
             var outPath = GetOutputFilePath();
@@ -73,11 +108,11 @@ namespace Converter
             {
                 if (new FileInfo(outPath).Length == 0L)
                 {
-                    Status = "Corrupted/Ongoing";
+                    Status = FileStatus.CorruptedOrNotTracked;
                 }
                 else
                 {
-                    Status = "Done";
+                    Status = FileStatus.Done;
                     ConvertCommand.SetEnabled(false);
                 }
             }
@@ -100,21 +135,6 @@ namespace Converter
             windowHidden = !windowHidden;
         }
 
-        public void OnConvertFinished(Process p) {
-            if (p.ExitCode == 0) {
-                Status = "Done";
-                ToggleWindowCommand.SetEnabled(false);
-            }
-            else
-            {
-                Status = "Failed";
-                logger.Log($"Error: exit code {p.ExitCode} when processing {fileInfo.Name}");
-                //logger.Log(p.StandardError.ReadToEnd());
-                ToggleWindowCommand.SetEnabled(false);
-                ConvertCommand.SetEnabled(true);
-            }
-            OnPropertyChanged(nameof(Status));
-        }
 
         public override string ToString() {
             return $"{fps} -> {fileInfo.Name}";
