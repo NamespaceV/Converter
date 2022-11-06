@@ -16,7 +16,7 @@ namespace Converter
     }
 
     public class VideoFileVM: INotifyPropertyChanged {
-        private FileInfo fileInfo;
+        private FileInfo sourceFI;
         private readonly int fps;
         private readonly ILogger logger;
         private Process runningProcess;
@@ -30,9 +30,9 @@ namespace Converter
         public SimpleCommand ConvertCommand { get; private set; }
         public SimpleCommand ToggleWindowCommand { get; private set; }
 
-        public VideoFileVM(FileInfo path, int fps, ILogger logger)
+        public VideoFileVM(FileInfo source, int fps, ILogger logger)
         {
-            this.fileInfo = path;
+            this.sourceFI = source;
             this.fps = fps;
             this.logger = logger;
             ConvertCommand = new SimpleCommand(Convert);
@@ -40,33 +40,36 @@ namespace Converter
             Refresh();
         }
 
-        private string GetOutputFilePath() {
+        private FileInfo GetProcessingFileInfo() {
+            var outDir = Constants.baseDir.EnumerateDirectories().Single(d => d.Name.ToLowerInvariant() == "processing").FullName;
+            return new FileInfo(Path.Combine(outDir, Path.GetFileNameWithoutExtension(sourceFI.Name) + ".webm"));
+        }
+
+        private FileInfo GetOutputFileInfo()
+        {
             var outDir = Constants.baseDir.EnumerateDirectories().Single(d => d.Name.ToLowerInvariant() == "output").FullName;
-            return Path.Combine(outDir, Path.GetFileNameWithoutExtension(fileInfo.Name) + ".webm");
+            return new FileInfo(Path.Combine(outDir, Path.GetFileNameWithoutExtension(sourceFI.Name) + ".webm"));
         }
 
         private void Convert()
         {
-            var outName = GetOutputFilePath();
-            logger.Log($"Converting {fileInfo.FullName} -> {outName}");
-            runningProcess = StartConversionProcess(outName);
+            var processingFI = GetProcessingFileInfo();
+            logger.Log($"Converting {sourceFI.FullName} -> {processingFI.FullName}");
+            runningProcess = StartConversionProcess(processingFI);
             Status = FileStatus.Running;
             ConvertCommand.SetEnabled(false);
             ToggleWindowCommand.SetEnabled(true);
             OnPropertyChanged(nameof(Status));
         }
 
-        private Process StartConversionProcess(string outName)
+        private Process StartConversionProcess(FileInfo processingFI)
         {
             var binaryPath = Constants.baseDir.GetFiles().Single(f => f.Name == "ffmpeg.exe").FullName;
-            var args = $"-i {fileInfo.FullName}" +
+            var args = $"-i {sourceFI.FullName}" +
                 $" -c:a libopus -b:a 64k -c:v libsvtav1 -crf 60" +
                 $" -pix_fmt yuv420p10le -g {fps * 50} -preset 4 -svtav1-params tune=0 -r {fps}" +
-                $" {outName}";
-            //binaryPath = "notepad";
-            //args = "";
+                $" {processingFI.FullName}";
             var info = new ProcessStartInfo(binaryPath, args);
-            //info.RedirectStandardError = true;
             var newProcess = Process.Start(info);
             newProcess.EnableRaisingEvents = true;
             newProcess.Exited += (e, a) =>
@@ -81,19 +84,34 @@ namespace Converter
         {
             if (p.ExitCode == 0)
             {
-                Status = FileStatus.Done;
-                string destFileName = fileInfo.FullName.Replace("input", "done", System.StringComparison.InvariantCultureIgnoreCase);
-                File.Move(fileInfo.FullName, destFileName);
-                ToggleWindowCommand.SetEnabled(false);
+                OnProcessingSuccess();
             }
             else
             {
-                Status = FileStatus.Failed;
-                logger.Log($"Error: exit code {p.ExitCode} when processing {fileInfo.Name}");
-                //logger.Log(p.StandardError.ReadToEnd());
-                ToggleWindowCommand.SetEnabled(false);
-                ConvertCommand.SetEnabled(true);
+                OnProcessingFailed(p);
             }
+        }
+
+        private void OnProcessingFailed(Process p)
+        {
+            Status = FileStatus.Failed;
+            logger.Log($"Error: exit code {p.ExitCode} when processing {sourceFI.Name}");
+            ToggleWindowCommand.SetEnabled(false);
+            ConvertCommand.SetEnabled(true);
+            OnPropertyChanged(nameof(Status));
+        }
+
+        private void OnProcessingSuccess()
+        {
+            Status = FileStatus.Done;
+            var destFileInfo = new FileInfo(sourceFI.FullName.Replace("input", "done", System.StringComparison.InvariantCultureIgnoreCase));
+            if (!Directory.Exists(destFileInfo.DirectoryName))
+            {
+                Directory.CreateDirectory(destFileInfo.DirectoryName);
+            }
+            sourceFI.MoveTo(destFileInfo.FullName);
+            GetProcessingFileInfo().MoveTo(GetOutputFileInfo().FullName);
+            ToggleWindowCommand.SetEnabled(false);
             OnPropertyChanged(nameof(Status));
         }
 
@@ -103,10 +121,10 @@ namespace Converter
             Status = FileStatus.Found;
             ConvertCommand.SetEnabled(true);
             ToggleWindowCommand.SetEnabled(true);
-            var outPath = GetOutputFilePath();
-            if (File.Exists(outPath))
+            var outFileInfo = GetProcessingFileInfo();
+            if (outFileInfo.Exists)
             {
-                if (new FileInfo(outPath).Length == 0L)
+                if (outFileInfo.Length == 0L)
                 {
                     Status = FileStatus.CorruptedOrNotTracked;
                 }
@@ -135,9 +153,8 @@ namespace Converter
             windowHidden = !windowHidden;
         }
 
-
         public override string ToString() {
-            return $"{fps} -> {fileInfo.Name}";
+            return $"{fps} -> {sourceFI.Name}";
         }
 
         protected void OnPropertyChanged([CallerMemberName] string name = null)
@@ -147,7 +164,7 @@ namespace Converter
 
         internal bool Matches(FileInfo f)
         {
-            return fileInfo.FullName == f.FullName;
+            return sourceFI.FullName == f.FullName;
         }
     }
 }
