@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.IO;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System;
 
 namespace Converter
 {
@@ -24,6 +25,7 @@ namespace Converter
 
 
         public FileStatus Status { get; set; }
+        public TimeSpan Duration { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -35,6 +37,7 @@ namespace Converter
             this.sourceFI = source;
             this.fps = fps;
             this.logger = logger;
+            Duration = GetVideoDuration();
             ConvertCommand = new SimpleCommand(Convert);
             ToggleWindowCommand = new SimpleCommand(ToggleWindow);
             Refresh();
@@ -49,6 +52,12 @@ namespace Converter
         {
             var outDir = Constants.baseDir.EnumerateDirectories().Single(d => d.Name.ToLowerInvariant() == "output").FullName;
             return new FileInfo(Path.Combine(outDir, Path.GetFileNameWithoutExtension(sourceFI.Name) + ".webm"));
+        }
+
+        private TimeSpan GetVideoDuration()
+        {
+            var f = TagLib.File.Create(sourceFI.FullName);
+            return f.Properties.Duration;
         }
 
         private void Convert()

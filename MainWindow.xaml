@@ -23,8 +23,9 @@
                 <ListView ItemsSource="{Binding Files}" Margin="10,40,0,10">
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Header="File" Width="300"/>
-                            <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Path=Status}" Width="100"/>
+                            <GridViewColumn Header="File" Width="350"/>
+                            <GridViewColumn Header="Duration" DisplayMemberBinding="{Binding Path=Duration, StringFormat=hh\\:mm\\ \\(ss\\)}" Width="75"/>
+                            <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Path=Status}" Width="50"/>
                             <GridViewColumn Header="Actions" CellTemplate="{StaticResource Actions}"/>
                         </GridView>
                     </ListView.View>
