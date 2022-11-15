@@ -1,4 +1,5 @@
 ﻿using Converter.Basic;
+using Converter.Logic;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 
-namespace Converter
+namespace Converter.ViewModels
 {
     public class MainWindowVM : INotifyPropertyChanged, ILogger
     {
@@ -19,7 +20,7 @@ namespace Converter
         public ICommand RefreshCommand { get; private set; }
         public ICommand AboutCommand { get; private set; }
 
-        public MainWindowVM() 
+        public MainWindowVM()
         {
             RefreshCommand = new SimpleCommand(RefreshList);
             AboutCommand = new SimpleCommand(ShowAbout);

@@ -1,4 +1,4 @@
-﻿namespace Converter
+﻿namespace Converter.Basic
 {
     public interface ILogger
     {
