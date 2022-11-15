@@ -1,5 +1,6 @@
 ﻿using Converter.Basic;
 using Converter.Logic;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -58,7 +59,7 @@ namespace Converter.ViewModels
 
         public void Log(string s)
         {
-            Logs += $"\n{s}";
+            Logs += $"\n[{DateTime.Now.ToString("HH:mm")}] {s}";
             OnPropertyChanged(nameof(Logs));
         }
 

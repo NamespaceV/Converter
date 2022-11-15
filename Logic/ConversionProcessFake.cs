@@ -21,8 +21,8 @@ namespace Converter.Logic
             {
                 Thread.Sleep(2000);
                 onProcessingSuccess();
+                //onProcessingFailed(5);
             });
         }
-
     }
 }

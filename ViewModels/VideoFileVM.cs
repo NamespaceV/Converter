@@ -56,10 +56,12 @@ namespace Converter.ViewModels
             conversion.StartConversionProcess(OnProcessingSuccess, OnProcessingFailed);
             Status = FileStatus.Running;
             Start = DateTimeOffset.Now;
+            Finish = null;
             ConvertCommand.SetEnabled(false);
             ToggleWindowCommand.SetEnabled(true);
             OnPropertyChanged(nameof(Status));
             OnPropertyChanged(nameof(Start));
+            OnPropertyChanged(nameof(Finish));
         }
 
         private void OnProcessingFailed(int? exitCode)
@@ -84,6 +86,8 @@ namespace Converter.ViewModels
             {
                 Status = FileStatus.Done;
                 Finish = DateTimeOffset.Now;
+
+                logger.Log($"Finished processing {conversion.GetSourceFileInfo().Name}");
                 ToggleWindowCommand.SetEnabled(false);
                 OnPropertyChanged(nameof(Status));
                 OnPropertyChanged(nameof(Finish));
