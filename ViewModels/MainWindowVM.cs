@@ -2,7 +2,6 @@
 using Converter.Logic;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
@@ -11,8 +10,6 @@ namespace Converter.ViewModels
 {
     public class MainWindowVM : INotifyPropertyChanged, ILogger
     {
-        private List<int> supportedFPS = new List<int>() { 30, 60 };
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public List<VideoFileVM> Files { get; set; } = new List<VideoFileVM>();
@@ -37,23 +34,17 @@ namespace Converter.ViewModels
         {
             var newFiles = new List<VideoFileVM>();
             var oldFiles = Files;
-            foreach (var fps in supportedFPS)
+            foreach (var f in FileListHelper.ListInputFiles())
             {
-                var files = Constants.baseDir.EnumerateDirectories()
-                    .Single(d => d.Name.ToLowerInvariant() == "input" + fps.ToString())
-                    .EnumerateFiles();
-                foreach (var f in files)
+                var match = oldFiles.Find(of => of.Matches(f.FileInfo));
+                if (match != null)
                 {
-                    var match = oldFiles.Find(of => of.Matches(f));
-                    if (match != null)
-                    {
-                        newFiles.Add(match);
-                        match.Refresh();
-                    }
-                    else
-                    {
-                        newFiles.Add(new VideoFileVM(f, fps, this));
-                    }
+                    newFiles.Add(match);
+                    match.Refresh();
+                }
+                else
+                {
+                    newFiles.Add(new VideoFileVM(f.FileInfo, f.Fps, this));
                 }
             }
             Files = newFiles;
