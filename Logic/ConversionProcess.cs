@@ -52,7 +52,7 @@ namespace Converter.Logic
             return new FileInfo(Path.Combine(outDir, Path.GetFileNameWithoutExtension(sourceFI.Name) + ".webm"));
         }
 
-        public void StartConversionProcess(Action onProcessingSuccess, Action<int?> onProcessingFailed) 
+        public virtual void StartConversionProcess(Action onProcessingSuccess, Action<int?> onProcessingFailed) 
         { 
             if (runningProcess != null) {
                 logger.Log($"Ignored!!! Conversion for {sourceFI.Name} already running.");

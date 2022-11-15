@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System;
 using Converter.Basic;
 using Converter.Logic;
+using System.Windows;
+using System.Windows.Threading;
 
 namespace Converter.ViewModels
 {
@@ -36,7 +38,9 @@ namespace Converter.ViewModels
 
         public VideoFileVM(FileInfo source, int fps, ILogger logger)
         {
-            conversion = new ConversionProcess(source, fps, logger);
+            conversion = SettingsProivider.UseFakeConversion 
+                ? new ConversionProcessFake(source, fps, logger)
+                : new ConversionProcess(source, fps, logger);
             this.fps = fps;
             this.logger = logger;
             Duration = conversion.GetVideoDuration();
@@ -60,24 +64,31 @@ namespace Converter.ViewModels
 
         private void OnProcessingFailed(int? exitCode)
         {
-            Status = FileStatus.Failed;
-            Finish = DateTimeOffset.Now;
+            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+            {
+                Status = FileStatus.Failed;
+                Finish = DateTimeOffset.Now;
 
-            logger.Log($"Error: exit code {exitCode} when processing {conversion.GetSourceFileInfo().Name}");
-            ToggleWindowCommand.SetEnabled(false);
-            ConvertCommand.SetEnabled(true);
+                logger.Log($"Error: exit code {exitCode} when processing {conversion.GetSourceFileInfo().Name}");
+                ToggleWindowCommand.SetEnabled(false);
+                ConvertCommand.SetEnabled(true);
 
-            OnPropertyChanged(nameof(Status));
-            OnPropertyChanged(nameof(Finish));
+                OnPropertyChanged(nameof(Status));
+                OnPropertyChanged(nameof(Finish));
+            }));
         }
 
         private void OnProcessingSuccess()
         {
-            Status = FileStatus.Done;
-            Finish = DateTimeOffset.Now;
-            ToggleWindowCommand.SetEnabled(false);
-            OnPropertyChanged(nameof(Status));
-            OnPropertyChanged(nameof(Finish));
+            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+            {
+                Status = FileStatus.Done;
+                Finish = DateTimeOffset.Now;
+                ToggleWindowCommand.SetEnabled(false);
+                OnPropertyChanged(nameof(Status));
+                OnPropertyChanged(nameof(Finish));
+            }));
+            
         }
 
         internal void Refresh()

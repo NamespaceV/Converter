@@ -8,11 +8,7 @@ namespace Converter.Basic
         private readonly Action lambda;
         private bool enabled;
 
-        public event EventHandler CanExecuteChanged
-        {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
-        }
+        public event EventHandler CanExecuteChanged;
 
         public SimpleCommand(Action lambda)
         {
@@ -34,6 +30,7 @@ namespace Converter.Basic
         {
             if (this.enabled == enabled) return;
             this.enabled = enabled;
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }
