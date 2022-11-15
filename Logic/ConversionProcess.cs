@@ -51,9 +51,8 @@ namespace Converter.Logic
             return new FileInfo(Path.Combine(outDir, Path.GetFileNameWithoutExtension(sourceFI.Name) + ".webm"));
         }
 
-
-        public void StartConversionProcess(Action<Process> onFinishedCallback)
-        {
+        public void StartConversionProcess(Action onProcessingSuccess, Action<int?> onProcessingFailed) 
+        { 
             if (runningProcess != null) {
                 logger.Log($"Ignored!!! Conversion for {sourceFI.Name} already running.");
                 return;
@@ -72,8 +71,11 @@ namespace Converter.Logic
                 if ((e as Process)?.ExitCode == 0)
                 {
                     MoveToDone();
+                    onProcessingSuccess();
                 }
-                onFinishedCallback(e as Process);
+                else {
+                    onProcessingFailed((e as Process)?.ExitCode);
+                }
             };
             runningProcess.PriorityClass = ProcessPriorityClass.Idle;
             windowHidden = false;

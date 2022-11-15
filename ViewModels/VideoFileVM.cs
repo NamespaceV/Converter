@@ -49,7 +49,7 @@ namespace Converter.ViewModels
         private void Convert()
         {
             logger.Log($"Converting {conversion.GetSourceFileInfo().FullName} -> {conversion.GetProcessingFileInfo().FullName}");
-            conversion.StartConversionProcess(OnConvertFinished);
+            conversion.StartConversionProcess(OnProcessingSuccess, OnProcessingFailed);
             Status = FileStatus.Running;
             Start = DateTimeOffset.Now;
             ConvertCommand.SetEnabled(false);
@@ -58,25 +58,12 @@ namespace Converter.ViewModels
             OnPropertyChanged(nameof(Start));
         }
 
-
-        public void OnConvertFinished(Process p)
-        {
-            if (p.ExitCode == 0)
-            {
-                OnProcessingSuccess();
-            }
-            else
-            {
-                OnProcessingFailed(p);
-            }
-        }
-
-        private void OnProcessingFailed(Process p)
+        private void OnProcessingFailed(int? exitCode)
         {
             Status = FileStatus.Failed;
             Finish = DateTimeOffset.Now;
 
-            logger.Log($"Error: exit code {p.ExitCode} when processing {conversion.GetSourceFileInfo().Name}");
+            logger.Log($"Error: exit code {exitCode} when processing {conversion.GetSourceFileInfo().Name}");
             ToggleWindowCommand.SetEnabled(false);
             ConvertCommand.SetEnabled(true);
 
