@@ -29,7 +29,6 @@
                             <GridViewColumn Header="Actions" CellTemplate="{StaticResource Actions}"/>
                             <GridViewColumn Header="Start" DisplayMemberBinding="{Binding Path=Start, StringFormat=HH\\:mm\\(ss\\) dd\\-MM\\-yyyy}" Width="75"/>
                             <GridViewColumn Header="Finish" DisplayMemberBinding="{Binding Path=Finish, StringFormat=HH\\:mm\\(ss\\) dd\\-MM\\-yyyy}" Width="75"/>
-
                         </GridView>
                     </ListView.View>
                 </ListView>

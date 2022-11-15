@@ -19,10 +19,11 @@ namespace Converter.Logic
             foreach (var fps in supportedFPS)
             {
 
-                var files = Constants.baseDir.EnumerateDirectories()
-                      .Single(d => d.Name.ToLowerInvariant() == "input" + fps.ToString())
-                      .EnumerateFiles()
-                      .Select(f => new SourceFile() { Fps = fps, FileInfo = f });
+                var files = new DirectoryInfo(SettingsProivider.GetBasePath)
+                    .EnumerateDirectories()
+                    .Single(d => d.Name.ToLowerInvariant() == "input" + fps.ToString())
+                    .EnumerateFiles()
+                    .Select(f => new SourceFile() { Fps = fps, FileInfo = f });
                 result.AddRange(files);
             }
             return result;

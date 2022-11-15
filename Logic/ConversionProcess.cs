@@ -35,19 +35,20 @@ namespace Converter.Logic
 
         public FileInfo GetSourceFileInfo()
         {
-            var outDir = Constants.baseDir.EnumerateDirectories().Single(d => d.Name.ToLowerInvariant() == "processing").FullName;
             return sourceFI;
         }
 
         public FileInfo GetProcessingFileInfo()
         {
-            var outDir = Constants.baseDir.EnumerateDirectories().Single(d => d.Name.ToLowerInvariant() == "processing").FullName;
+            var outDir = new DirectoryInfo(SettingsProivider.GetBasePath).EnumerateDirectories()
+                .Single(d => d.Name.ToLowerInvariant() == "processing").FullName;
             return new FileInfo(Path.Combine(outDir, Path.GetFileNameWithoutExtension(sourceFI.Name) + ".webm"));
         }
 
         public FileInfo GetOutputFileInfo()
         {
-            var outDir = Constants.baseDir.EnumerateDirectories().Single(d => d.Name.ToLowerInvariant() == "output").FullName;
+            var outDir = new DirectoryInfo(SettingsProivider.GetBasePath).EnumerateDirectories()
+                .Single(d => d.Name.ToLowerInvariant() == "output").FullName;
             return new FileInfo(Path.Combine(outDir, Path.GetFileNameWithoutExtension(sourceFI.Name) + ".webm"));
         }
 
@@ -57,7 +58,8 @@ namespace Converter.Logic
                 logger.Log($"Ignored!!! Conversion for {sourceFI.Name} already running.");
                 return;
             }
-            var binaryPath = Constants.baseDir.GetFiles().Single(f => f.Name == "ffmpeg.exe").FullName;
+            var binaryPath = new DirectoryInfo(SettingsProivider.GetBasePath).GetFiles()
+                .Single(f => f.Name == "ffmpeg.exe").FullName;
             //binaryPath = "notepad.exe";
             var args = $"-i {sourceFI.FullName}" +
                 $" -c:a libopus -b:a 64k -c:v libsvtav1 -crf 60" +
