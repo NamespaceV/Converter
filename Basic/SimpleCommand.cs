@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace Converter
+namespace Converter.Basic
 {
     public class SimpleCommand : ICommand
     {
@@ -30,7 +30,8 @@ namespace Converter
             lambda.Invoke();
         }
 
-        public void SetEnabled(bool enabled) {
+        public void SetEnabled(bool enabled)
+        {
             if (this.enabled == enabled) return;
             this.enabled = enabled;
         }

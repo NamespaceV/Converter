@@ -5,6 +5,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System;
+using Converter.Basic;
 
 namespace Converter
 {
@@ -26,6 +27,8 @@ namespace Converter
 
         public FileStatus Status { get; set; }
         public TimeSpan Duration { get; set; }
+        public DateTimeOffset? Start { get; set; }
+        public DateTimeOffset? Finish { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -66,14 +69,17 @@ namespace Converter
             logger.Log($"Converting {sourceFI.FullName} -> {processingFI.FullName}");
             runningProcess = StartConversionProcess(processingFI);
             Status = FileStatus.Running;
+            Start = DateTimeOffset.Now;
             ConvertCommand.SetEnabled(false);
             ToggleWindowCommand.SetEnabled(true);
             OnPropertyChanged(nameof(Status));
+            OnPropertyChanged(nameof(Start));
         }
 
         private Process StartConversionProcess(FileInfo processingFI)
         {
             var binaryPath = Constants.baseDir.GetFiles().Single(f => f.Name == "ffmpeg.exe").FullName;
+            //binaryPath = "notepad.exe";
             var args = $"-i {sourceFI.FullName}" +
                 $" -c:a libopus -b:a 64k -c:v libsvtav1 -crf 60" +
                 $" -pix_fmt yuv420p10le -g {fps * 50} -preset 4 -svtav1-params tune=0 -r {fps}" +
@@ -104,15 +110,21 @@ namespace Converter
         private void OnProcessingFailed(Process p)
         {
             Status = FileStatus.Failed;
+            Finish = DateTimeOffset.Now;
+
             logger.Log($"Error: exit code {p.ExitCode} when processing {sourceFI.Name}");
             ToggleWindowCommand.SetEnabled(false);
             ConvertCommand.SetEnabled(true);
+
             OnPropertyChanged(nameof(Status));
+            OnPropertyChanged(nameof(Finish));
         }
 
         private void OnProcessingSuccess()
         {
             Status = FileStatus.Done;
+            Finish = DateTimeOffset.Now;
+
             var destFileInfo = new FileInfo(sourceFI.FullName.Replace("input", "done", System.StringComparison.InvariantCultureIgnoreCase));
             if (!Directory.Exists(destFileInfo.DirectoryName))
             {
@@ -122,6 +134,7 @@ namespace Converter
             GetProcessingFileInfo().MoveTo(GetOutputFileInfo().FullName);
             ToggleWindowCommand.SetEnabled(false);
             OnPropertyChanged(nameof(Status));
+            OnPropertyChanged(nameof(Finish));
         }
 
         internal void Refresh()
