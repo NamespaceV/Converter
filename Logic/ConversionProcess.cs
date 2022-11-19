@@ -114,7 +114,7 @@ namespace Converter.Logic
                 return;
             }
             var handle = runningProcess.MainWindowHandle.ToInt32();
-            logger.Log($"TOGGLE - windowHidden = {!windowHidden} handle = {handle}.");
+            logger.Log($"TOGGLE - windowHidden -> {!windowHidden} handle = {handle}.");
             WindowHelper.ShowWindow(handle, windowHidden ? WindowHelper.ShowWindowEnum.Show : WindowHelper.ShowWindowEnum.Hide);
             windowHidden = !windowHidden;
         }

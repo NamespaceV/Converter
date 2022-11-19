@@ -5,8 +5,8 @@ namespace Converter.Logic
     internal class WindowHelper
     {
         public enum ShowWindowEnum{
-            Show = 0,
-            Hide = 5,
+            Hide = 0,
+            Show = 5,
         }
 
         [DllImport("User32")]
