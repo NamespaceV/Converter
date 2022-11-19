@@ -3,6 +3,7 @@ using Converter.Logic;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
@@ -29,6 +30,22 @@ namespace Converter.ViewModels
         {
             var aboutText = "Video format converter (opinionated ffmpeg runner)" + "\n\"Replace icon\" by Icons8 (icons8.com)";
             MessageBox.Show(aboutText, "About");
+        }
+
+        internal void OnClosing(CancelEventArgs e)
+        {
+            if (!Files.Any(f => f.Status == FileStatus.Running)) {
+                return;
+            }
+            var result = MessageBox.Show(
+                "There is a conversion running! Do you really want to close?",
+                "Do you really want to close?",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Exclamation);
+            if (result != MessageBoxResult.Yes)
+            {
+                e.Cancel = true;
+            }
         }
 
         private void RefreshList()

@@ -10,5 +10,10 @@ namespace Converter
             InitializeComponent();
             DataContext = new MainWindowVM();
         }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            (DataContext as MainWindowVM).OnClosing(e);
+        }
     }
 }
