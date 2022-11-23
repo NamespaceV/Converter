@@ -15,26 +15,41 @@
         </DataTemplate>
     </Window.Resources>
     <Grid>
-        <DockPanel>
-            <TextBox DockPanel.Dock="Right" Width="300" Margin="10,10,10,10" TextWrapping="Wrap" Text="{Binding Logs}"/>
-            <Grid>
-                <Button Content="Refresh" Command="{Binding Path=RefreshCommand}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
-                <Button Content="About" Command="{Binding Path=AboutCommand}" HorizontalAlignment="Left" Margin="86,10,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
-                <ListView ItemsSource="{Binding Files}" Margin="10,40,0,10">
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn Header="File" Width="350"/>
-                            <GridViewColumn Header="Duration" DisplayMemberBinding="{Binding Path=Duration, StringFormat=hh\\:mm\\ \\(ss\\)}" Width="75"/>
-                            <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Path=Status}" Width="75"/>
-                            <GridViewColumn Header="Actions" CellTemplate="{StaticResource Actions}"/>
-                            <GridViewColumn Header="Start" DisplayMemberBinding="{Binding Path=Start, StringFormat=HH\\:mm\\(ss\\) dd\\-MM\\-yyyy}" Width="75"/>
-                            <GridViewColumn Header="Finish" DisplayMemberBinding="{Binding Path=Finish, StringFormat=HH\\:mm\\(ss\\) dd\\-MM\\-yyyy}" Width="75"/>
-                        </GridView>
-                    </ListView.View>
-                </ListView>
-            </Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid Width="auto">
+            <Button Content="Refresh" Command="{Binding Path=RefreshCommand}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
+            <Button Content="About" Command="{Binding Path=AboutCommand}" HorizontalAlignment="Left" Margin="86,10,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
+            <Label Content="{Binding Path=Summary}" Margin="170,10,0,0" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top"></Label>
+            <ListView ItemsSource="{Binding Files}" Margin="10,40,0,10">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="File" Width="350"/>
+                        <GridViewColumn Header="Duration" DisplayMemberBinding="{Binding Path=Duration, StringFormat=hh\\:mm\\ \\(ss\\)}" Width="75"/>
+                        <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Path=Status}" Width="75"/>
+                        <GridViewColumn Header="Actions" CellTemplate="{StaticResource Actions}"/>
+                        <GridViewColumn Header="Start" DisplayMemberBinding="{Binding Path=Start, StringFormat=HH\\:mm\\(ss\\) dd\\-MM\\-yyyy}" Width="75"/>
+                        <GridViewColumn Header="Finish" DisplayMemberBinding="{Binding Path=Finish, StringFormat=HH\\:mm\\(ss\\) dd\\-MM\\-yyyy}" Width="75"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Grid>
+        <GridSplitter Grid.Row="1" Grid.Column="0" 
+                  Margin="5,2,5,2"
+                  Height="5"
+                  VerticalAlignment="Center" 
+                  HorizontalAlignment="Stretch" ShowsPreview="True" />
+        
+        <DockPanel Grid.Row="2" Grid.Column="0" Width="auto" >
+            <Label x:Name="LogsLabel" DockPanel.Dock="Top">Logs:</Label>
+            <TextBox  Margin="10,0,10,10" TextWrapping="Wrap" Text="{Binding Logs}"/>
         </DockPanel>
-
     </Grid>
 
 </Window>

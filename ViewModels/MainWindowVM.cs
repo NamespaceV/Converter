@@ -15,7 +15,8 @@ namespace Converter.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
 
         public List<VideoFileVM> Files { get; set; } = new List<VideoFileVM>();
-        public string Logs { get; set; } = "Logs:";
+        public string Logs { get; set; } = "";
+        public string Summary { get; set; }
         public ICommand RefreshCommand { get; private set; }
         public ICommand AboutCommand { get; private set; }
 
@@ -66,7 +67,19 @@ namespace Converter.ViewModels
                 }
             }
             Files = newFiles;
+            foreach (var f in newFiles) {
+                f.PropertyChanged += (o, e) => UpdateSummary();
+            }
             OnPropertyChanged(nameof(Files));
+            UpdateSummary();
+        }
+
+        private void UpdateSummary()
+        {
+            Summary = $"{Files.Count} files" 
+                + $" -> {Files.Select(f => f.Duration).Aggregate((a, b) => a.Add(b)).ToString("hh\\:mm\\ \\(ss\\)")} total length"
+                + $" || Running: {Files.Count(f => f.Status == FileStatus.Running)}";
+            OnPropertyChanged(nameof(Summary));
         }
 
         protected void OnPropertyChanged([CallerMemberName] string name = null)
