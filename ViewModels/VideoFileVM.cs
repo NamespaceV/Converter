@@ -26,6 +26,7 @@ namespace Converter.ViewModels
         private readonly int fps;
         private readonly ILogger logger;
 
+        public bool InQueue { get; set; }
         public FileStatus Status { get; set; }
         public TimeSpan Duration { get; set; }
         public DateTimeOffset? Start { get; set; }

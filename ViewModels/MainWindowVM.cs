@@ -19,6 +19,7 @@ namespace Converter.ViewModels
         public string Summary { get; set; }
         public ICommand RefreshCommand { get; private set; }
         public ICommand AboutCommand { get; private set; }
+        public bool QueueActive { get; set; }
 
         public MainWindowVM()
         {
@@ -76,9 +77,14 @@ namespace Converter.ViewModels
 
         private void UpdateSummary()
         {
+            int activeCount = Files.Count(f => f.Status == FileStatus.Running);
             Summary = $"{Files.Count} files" 
                 + $" -> {Files.Select(f => f.Duration).Aggregate((a, b) => a.Add(b)).ToString("hh\\:mm\\ \\(ss\\)")} total length"
-                + $" || Running: {Files.Count(f => f.Status == FileStatus.Running)}";
+                + $" || Running: {activeCount}";
+            if (QueueActive && activeCount == 0) {
+                var next = Files.FirstOrDefault(f => f.InQueue && f.Status == FileStatus.Found);
+                next?.ConvertCommand.Execute(null);
+            }
             OnPropertyChanged(nameof(Summary));
         }
 

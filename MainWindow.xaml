@@ -24,12 +24,20 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid Width="auto">
-            <Button Content="Refresh" Command="{Binding Path=RefreshCommand}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
-            <Button Content="About" Command="{Binding Path=AboutCommand}" HorizontalAlignment="Left" Margin="86,10,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
-            <Label Content="{Binding Path=Summary}" Margin="170,10,0,0" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top"></Label>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Refresh" Command="{Binding Path=RefreshCommand}" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
+                <Button Content="About" Command="{Binding Path=AboutCommand}" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
+                <CheckBox Content="Queue Active" Margin="5,5,0,0" IsChecked="{Binding Path=QueueActive}"/>
+
+                <Label Content="{Binding Path=Summary}" Margin="10,5,0,0" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top"></Label>
+
+            </StackPanel>
             <ListView ItemsSource="{Binding Files}" Margin="10,40,0,10">
                 <ListView.View>
                     <GridView>
+                        <GridViewColumn Header=" ">
+                            <GridViewColumn.CellTemplate><DataTemplate><CheckBox IsChecked="{Binding Path=InQueue}"/></DataTemplate></GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                         <GridViewColumn Header="File" Width="350"/>
                         <GridViewColumn Header="Duration" DisplayMemberBinding="{Binding Path=Duration, StringFormat=hh\\:mm\\ \\(ss\\)}" Width="75"/>
                         <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Path=Status}" Width="75"/>
