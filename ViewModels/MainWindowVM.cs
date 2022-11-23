@@ -89,7 +89,10 @@ namespace Converter.ViewModels
 
         public void Log(string s)
         {
-            Logs += $"\n[{DateTime.Now.ToString("HH:mm")}] {s}";
+            if (!string.IsNullOrEmpty(Logs)) {
+                Logs += "\n";
+            }
+            Logs += $"[{DateTime.Now.ToString("HH:mm")}] {s}";
             OnPropertyChanged(nameof(Logs));
         }
 
