@@ -18,6 +18,7 @@ namespace Converter.ViewModels
         public string Logs { get; set; } = "";
         public string Summary { get; set; }
         public ICommand RefreshCommand { get; private set; }
+        public ICommand ShowDirCommand { get; private set; }
         public ICommand AboutCommand { get; private set; }
         public bool QueueActive { get; set; }
 
@@ -25,6 +26,7 @@ namespace Converter.ViewModels
         {
             RefreshCommand = new SimpleCommand(RefreshList);
             AboutCommand = new SimpleCommand(ShowAbout);
+            ShowDirCommand = new SimpleCommand(() => ConversionProcess.ShowProgressDir());
             RefreshList();
         }
 

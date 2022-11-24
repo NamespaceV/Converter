@@ -27,6 +27,8 @@
             <StackPanel Orientation="Horizontal">
                 <Button Content="Refresh" Command="{Binding Path=RefreshCommand}" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
                 <Button Content="About" Command="{Binding Path=AboutCommand}" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
+                <Button Content="Show Dir" Command="{Binding Path=ShowDirCommand}" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
+
                 <CheckBox Content="Queue Active" Margin="5,5,0,0" IsChecked="{Binding Path=QueueActive}"/>
 
                 <Label Content="{Binding Path=Summary}" Margin="10,5,0,0" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top"></Label>

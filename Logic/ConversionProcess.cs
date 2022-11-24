@@ -54,7 +54,7 @@ namespace Converter.Logic
 
         public virtual void StartConversionProcess(Action onProcessingSuccess, Action<int?> onProcessingFailed) 
         { 
-            if (runningProcess != null) {
+            if (runningProcess != null && !runningProcess.HasExited) {
                 logger.Log($"Ignored!!! Conversion for {sourceFI.Name} already running.");
                 return;
             }
@@ -66,6 +66,8 @@ namespace Converter.Logic
                 $" -pix_fmt yuv420p10le -g {fps * 50} -preset 4 -svtav1-params tune=0 -r {fps}" +
                 $" {GetProcessingFileInfo().FullName}";
             var info = new ProcessStartInfo(binaryPath, args);
+            info.UseShellExecute = true;
+            info.WindowStyle = ProcessWindowStyle.Minimized;
             runningProcess = Process.Start(info);
             runningProcess.EnableRaisingEvents = true;
             runningProcess.Exited += (e, a) =>
@@ -117,6 +119,12 @@ namespace Converter.Logic
             logger.Log($"TOGGLE - windowHidden -> {!windowHidden} handle = {handle}.");
             WindowHelper.ShowWindow(handle, windowHidden ? WindowHelper.ShowWindowEnum.Show : WindowHelper.ShowWindowEnum.Hide);
             windowHidden = !windowHidden;
+        }
+
+        public static void ShowProgressDir() {
+            var outDir = new DirectoryInfo(SettingsProivider.GetBasePath).EnumerateDirectories()
+               .Single(d => d.Name.ToLowerInvariant() == "processing").FullName;
+            Process.Start("explorer.exe", outDir);
         }
     }
 }
