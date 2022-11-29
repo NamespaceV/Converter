@@ -21,12 +21,14 @@ namespace Converter.ViewModels
         public ICommand ShowDirCommand { get; private set; }
         public ICommand AboutCommand { get; private set; }
         public bool QueueActive { get; set; }
+        public ILogger? ExtraLogger { get; set; }
 
         public MainWindowVM()
         {
             RefreshCommand = new SimpleCommand(RefreshList);
             AboutCommand = new SimpleCommand(ShowAbout);
             ShowDirCommand = new SimpleCommand(() => ConversionProcess.ShowProgressDir());
+            ExtraLogger = new FileLogger();
             RefreshList();
         }
 
@@ -102,12 +104,14 @@ namespace Converter.ViewModels
             }
             Logs += $"[{DateTime.Now.ToString("HH:mm")}] {s}";
             OnPropertyChanged(nameof(Logs));
+            ExtraLogger?.Log(s);
         }
 
         public void LogSameLine(string s)
         {
             Logs += $"{s}";
             OnPropertyChanged(nameof(Logs));
+            ExtraLogger?.LogSameLine(s);
         }
     }
 }
