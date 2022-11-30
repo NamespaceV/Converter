@@ -36,6 +36,9 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>ConverterSettings.Designer.cs</LastGenOutput>
     </None>
+    <None Update="icon\icons8-replace-32-active.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

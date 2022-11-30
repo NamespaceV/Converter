@@ -12,6 +12,8 @@ namespace Converter.ViewModels
 {
     public class MainWindowVM : INotifyPropertyChanged, ILogger
     {
+        private readonly IconSwitcher switcher;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public List<VideoFileVM> Files { get; set; } = new List<VideoFileVM>();
@@ -21,15 +23,16 @@ namespace Converter.ViewModels
         public ICommand ShowDirCommand { get; private set; }
         public ICommand AboutCommand { get; private set; }
         public bool QueueActive { get; set; }
-        public ILogger? ExtraLogger { get; set; }
+        public ILogger ExtraLogger { get; set; }
 
-        public MainWindowVM()
+        public MainWindowVM(IconSwitcher switcher)
         {
             RefreshCommand = new SimpleCommand(RefreshList);
             AboutCommand = new SimpleCommand(ShowAbout);
             ShowDirCommand = new SimpleCommand(() => ConversionProcess.ShowProgressDir());
             ExtraLogger = new FileLogger();
             RefreshList();
+            this.switcher = switcher;
         }
 
         private void ShowAbout()
@@ -51,6 +54,10 @@ namespace Converter.ViewModels
             if (result != MessageBoxResult.Yes)
             {
                 e.Cancel = true;
+            }
+            else
+            {
+                ExtraLogger?.Log("App terminated while job was running.");
             }
         }
 
@@ -85,6 +92,7 @@ namespace Converter.ViewModels
             Summary = $"{Files.Count} files" 
                 + $" -> {Files.Select(f => f.Duration).Aggregate((a, b) => a.Add(b)).ToString("hh\\:mm\\ \\(ss\\)")} total length"
                 + $" || Running: {activeCount}";
+            switcher?.SetActiveIcon(activeCount > 0);
             if (QueueActive && activeCount == 0) {
                 var next = Files.FirstOrDefault(f => f.InQueue && f.Status == FileStatus.Found);
                 next?.ConvertCommand.Execute(null);
