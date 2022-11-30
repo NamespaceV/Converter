@@ -89,8 +89,11 @@ namespace Converter.ViewModels
         private void UpdateSummary()
         {
             int activeCount = Files.Count(f => f.Status == FileStatus.Running);
-            Summary = $"{Files.Count} files" 
-                + $" -> {Files.Select(f => f.Duration).Aggregate((a, b) => a.Add(b)).ToString("hh\\:mm\\ \\(ss\\)")} total length"
+            var inQueue = Files.Where(f => f.InQueue && (f.Status == FileStatus.Running || f.Status == FileStatus.Found));
+
+            Summary =
+                  $"{Files.Count} files -> {Files.Select(f => f.Duration).Aggregate(new TimeSpan(), (a, b) => a.Add(b)).ToString("hh\\:mm\\ \\(ss\\)")} total length"
+                + $" || In queue {inQueue.Count()} -> {inQueue.Select(f => f.Duration).Aggregate(new TimeSpan(), (a, b) => a.Add(b)).ToString("hh\\:mm\\ \\(ss\\)")} total length"
                 + $" || Running: {activeCount}";
             switcher?.SetActiveIcon(activeCount > 0);
             if (QueueActive && activeCount == 0) {
