@@ -1,8 +1,10 @@
 ﻿using Converter.Basic;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Documents;
 
 namespace Converter.Logic
 {
@@ -61,11 +63,25 @@ namespace Converter.Logic
             var binaryPath = new DirectoryInfo(SettingsProivider.GetBasePath).GetFiles()
                 .Single(f => f.Name == "ffmpeg.exe").FullName;
             //binaryPath = "notepad.exe";
-            var args = $"-i {sourceFI.FullName}" +
-                $" -c:a libopus -b:a 64k -c:v libsvtav1 -crf 60" +
-                $" -pix_fmt yuv420p10le -g {fps * 50} -preset 4 -svtav1-params tune=0 -r {fps}" +
-                $" {GetProcessingFileInfo().FullName}";
-            var info = new ProcessStartInfo(binaryPath, args);
+            var args = new List<string>()
+            {
+                $"-i {sourceFI.FullName}",
+                "-c:a libopus",
+                "-b:a 64k",
+                "-c:v libsvtav1",
+                "-crf 60",
+                "-pix_fmt yuv420p10le",
+                $"-g {fps * 30}",
+                "-preset 4",
+                "-svtav1-params tune=0",
+                $"-r {fps}",
+                "-fflags +bitexact",
+                "-flags:a +bitexact",
+                "-flags:v +bitexact",
+                "-map_metadata -1",
+                GetProcessingFileInfo().FullName,
+            };
+            var info = new ProcessStartInfo(binaryPath, string.Join(" ", args));
             info.UseShellExecute = true;
             info.WindowStyle = ProcessWindowStyle.Minimized;
             runningProcess = Process.Start(info);
