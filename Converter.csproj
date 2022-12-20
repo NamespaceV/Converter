@@ -9,10 +9,11 @@
 
   <ItemGroup>
     <None Remove="icons8-replace-32.png" />
+    <None Remove="Icon\icons8-replace-32.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="icon\icons8-replace-32.ico" />
+    <Content Include="Icon\icons8-replace-32.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="icons8-replace-32.png" />
+    <Resource Include="Icon\icons8-replace-32.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,7 +37,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>ConverterSettings.Designer.cs</LastGenOutput>
     </None>
-    <None Update="icon\icons8-replace-32-active.png">
+    <None Update="Icon\icons8-replace-32-active.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
