@@ -35,7 +35,7 @@
                 <Label Content="{Binding Path=Summary}" Margin="10,5,0,0" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top"></Label>
 
             </StackPanel>
-            <ListView ItemsSource="{Binding Files}" Margin="10,40,0,10">
+            <ListView x:Name="FilesList" ItemsSource="{Binding Files}" Margin="10,40,0,10" KeyDown="FilesList_KeyDown" PreviewKeyDown="FilesList_PreviewKeyDown">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Header=" ">

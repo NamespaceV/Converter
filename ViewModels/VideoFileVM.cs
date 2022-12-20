@@ -26,7 +26,8 @@ namespace Converter.ViewModels
         private readonly int fps;
         private readonly ILogger logger;
 
-        public bool InQueue { get; set; }
+        private bool inQueue;
+        public bool InQueue { get => inQueue; set { inQueue = value; OnPropertyChanged(nameof(InQueue)); }}
         public FileStatus Status { get; set; }
         public TimeSpan Duration { get; set; }
         public DateTimeOffset? Start { get; set; }
@@ -39,7 +40,7 @@ namespace Converter.ViewModels
 
         public VideoFileVM(FileInfo source, int fps, ILogger logger)
         {
-            conversion = SettingsProivider.UseFakeConversion 
+            conversion = SettingsProivider.UseFakeConversion
                 ? new ConversionProcessFake(source, fps, logger)
                 : new ConversionProcess(source, fps, logger);
             this.fps = fps;
@@ -49,7 +50,6 @@ namespace Converter.ViewModels
             ToggleWindowCommand = new SimpleCommand(() => conversion.ToggleWindow());
             Refresh();
         }
-
 
         private void Convert()
         {
@@ -93,14 +93,15 @@ namespace Converter.ViewModels
                 OnPropertyChanged(nameof(Status));
                 OnPropertyChanged(nameof(Finish));
             }));
-            
+
         }
 
         internal void Refresh()
         {
-            if (Status == FileStatus.Running) { return; }         
+            if (Status == FileStatus.Running) { return; }
 
-            switch (conversion.CheckStatus()) {
+            switch (conversion.CheckStatus())
+            {
                 case ConversionStatusEnum.NotStarted:
                     Status = FileStatus.Found;
                     ConvertCommand.SetEnabled(true);
@@ -132,6 +133,12 @@ namespace Converter.ViewModels
         internal bool Matches(FileInfo f)
         {
             return conversion.GetSourceFileInfo().FullName == f.FullName;
+        }
+
+        internal void ToggleInQueue()
+        {
+            InQueue = !InQueue;
+            OnPropertyChanged(nameof(InQueue));
         }
     }
 }

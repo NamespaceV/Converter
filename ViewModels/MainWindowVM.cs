@@ -125,5 +125,12 @@ namespace Converter.ViewModels
             OnPropertyChanged(nameof(Logs));
             ExtraLogger?.LogSameLine(s);
         }
+
+        internal void OnListKeyDown(KeyEventArgs e, int selectedIndex)
+        {
+            if (e.Key == Key.Space && selectedIndex >= 0) {
+                Files[selectedIndex].ToggleInQueue();
+            }
+        }
     }
 }
