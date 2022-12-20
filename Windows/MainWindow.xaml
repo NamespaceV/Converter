@@ -36,6 +36,11 @@
 
             </StackPanel>
             <ListView x:Name="FilesList" ItemsSource="{Binding Files}" Margin="10,40,0,10" KeyDown="FilesList_KeyDown" PreviewKeyDown="FilesList_PreviewKeyDown">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                    </Style>
+                </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Header=" ">

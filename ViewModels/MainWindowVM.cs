@@ -18,6 +18,7 @@ namespace Converter.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
 
         public List<VideoFileVM> Files { get; set; } = new List<VideoFileVM>();
+
         public string Logs { get; set; } = "";
         public string Summary { get; set; }
         public ICommand RefreshCommand { get; private set; }
@@ -126,10 +127,13 @@ namespace Converter.ViewModels
             ExtraLogger?.LogSameLine(s);
         }
 
-        internal void OnListKeyDown(KeyEventArgs e, int selectedIndex)
+        internal void ToggleSelected()
         {
-            if (e.Key == Key.Space && selectedIndex >= 0) {
-                Files[selectedIndex].ToggleInQueue();
+            var selected = Files.Where(f => f.IsSelected);
+            var allInQueue = selected.All(selected=> selected.InQueue);
+            foreach (var f in selected.Where(f => f.InQueue == allInQueue))
+            {
+                f.ToggleInQueue();
             }
         }
     }

@@ -28,6 +28,7 @@ namespace Converter.ViewModels
 
         private bool inQueue;
         public bool InQueue { get => inQueue; set { inQueue = value; OnPropertyChanged(nameof(InQueue)); }}
+        public bool IsSelected { get; set; }
         public FileStatus Status { get; set; }
         public TimeSpan Duration { get; set; }
         public DateTimeOffset? Start { get; set; }

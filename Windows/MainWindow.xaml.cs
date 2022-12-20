@@ -4,6 +4,7 @@ using System;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Linq;
 
 namespace Converter
 {
@@ -45,8 +46,8 @@ namespace Converter
 
         private void FilesList_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (e.Key == System.Windows.Input.Key.Space) {
-                (DataContext as MainWindowVM).OnListKeyDown(e, FilesList.SelectedIndex);
+            if (e.Key == System.Windows.Input.Key.Space || e.Key == System.Windows.Input.Key.S) {
+                (DataContext as MainWindowVM).ToggleSelected();
             }
         }
     }
