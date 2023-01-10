@@ -16,6 +16,7 @@
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="25"/>
             <RowDefinition Height="2*"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
@@ -24,16 +25,22 @@
             <ColumnDefinition Width="257*" />
             <ColumnDefinition Width="909*"/>
         </Grid.ColumnDefinitions>
-        <Grid Width="auto" Grid.ColumnSpan="2">
+        <Grid Width="auto" Grid.ColumnSpan="2" Grid.Row="0">
+            <Menu>
+                <MenuItem Header="Main">
+                    <MenuItem Header="Refresh" Command="{Binding Path=RefreshCommand}" />
+                    <MenuItem Header="Show Dir" Command="{Binding Path=ShowDirCommand}"/>
+                </MenuItem>
+                <MenuItem Header="About">
+                    <MenuItem Header="About" Command="{Binding Path=AboutCommand}"/>
+                </MenuItem>
+            </Menu>
+        </Grid>
+        <Grid Width="auto" Grid.Row="1" Grid.ColumnSpan="2">
             <StackPanel Orientation="Horizontal">
                 <Button Content="Refresh" Command="{Binding Path=RefreshCommand}" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
-                <Button Content="About" Command="{Binding Path=AboutCommand}" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
-                <Button Content="Show Dir" Command="{Binding Path=ShowDirCommand}" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
-
-                <CheckBox Content="Queue Active" Margin="5,5,0,0" IsChecked="{Binding Path=QueueActive}"/>
-
+                <CheckBox Content="Queue Active" Margin="15,10,0,0" IsChecked="{Binding Path=QueueActive}"/>
                 <Label Content="{Binding Path=Summary}" Margin="10,5,0,0" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top"></Label>
-
             </StackPanel>
             <ListView x:Name="FilesList" ItemsSource="{Binding Files}" Margin="10,40,0,10" KeyDown="FilesList_KeyDown" PreviewKeyDown="FilesList_PreviewKeyDown">
                 <ListView.ItemContainerStyle>
@@ -60,13 +67,13 @@
                 </ListView.View>
             </ListView>
         </Grid>
-        <GridSplitter Grid.Row="1" Grid.Column="0" 
+        <GridSplitter Grid.Row="2" Grid.Column="0"
                   Margin="5,0,5,0"
                   Height="5"
                   VerticalAlignment="Center" 
                   HorizontalAlignment="Stretch" ShowsPreview="True" Grid.ColumnSpan="2" />
 
-        <DockPanel Grid.Row="1" Grid.Column="0" Width="auto" Grid.ColumnSpan="2" Margin="0,9,0,0" Grid.RowSpan="2" >
+        <DockPanel Grid.Row="2" Grid.Column="0" Width="auto" Grid.ColumnSpan="2" Margin="0,9,0,0" Grid.RowSpan="2" >
             <Label x:Name="LogsLabel" DockPanel.Dock="Top">Logs:</Label>
             <TextBox  Margin="10,0,10,10" TextWrapping="Wrap" Text="{Binding Logs}" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
         </DockPanel>
