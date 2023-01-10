@@ -1,0 +1,14 @@
+﻿<Window x:Class="Converter.Windows.TakeTopXPopup"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Converter.Windows"
+        mc:Ignorable="d"
+        Title="Take Top X..." Height="108" Width="172" WindowStyle="ToolWindow">
+    <StackPanel Orientation="Vertical">
+        <Label Content="Take top X files:"></Label>
+        <TextBox x:Name="number">10</TextBox>
+        <Button Click="Button_OK_Click">OK</Button>
+    </StackPanel>
+</Window>

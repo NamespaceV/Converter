@@ -23,6 +23,7 @@ namespace Converter.ViewModels
         public string Summary { get; set; }
         public ICommand RefreshCommand { get; private set; }
         public ICommand ShowDirCommand { get; private set; }
+        public ICommand TakeTopCommand { get; private set; }
         public ICommand AboutCommand { get; private set; }
         public bool QueueActive { get; set; }
         public ILogger ExtraLogger { get; set; }
@@ -31,6 +32,7 @@ namespace Converter.ViewModels
         {
             RefreshCommand = new SimpleCommand(RefreshList);
             AboutCommand = new SimpleCommand(ShowAbout);
+            TakeTopCommand = new SimpleCommand(TakeTopX);
             ShowDirCommand = new SimpleCommand(() => ConversionProcess.ShowProgressDir());
             ExtraLogger = new FileLogger();
             RefreshList();
@@ -41,6 +43,11 @@ namespace Converter.ViewModels
         {
             var aboutText = "Video format converter (opinionated ffmpeg runner)" + "\n\"Replace icon\" by Icons8 (icons8.com)";
             MessageBox.Show(aboutText, "About");
+        }
+
+        private void TakeTopX() {
+            var popup = new Windows.TakeTopXPopup(this);
+            popup.Show();
         }
 
         internal void OnClosing(CancelEventArgs e)
@@ -135,6 +142,12 @@ namespace Converter.ViewModels
             {
                 f.ToggleInQueue();
             }
+        }
+
+        internal void TakeTop(int cnt)
+        {
+            foreach (var f in Files.Take(cnt)) { f.InQueue = true; }
+            foreach (var f in Files.Skip(cnt)) { f.InQueue = false; }
         }
     }
 }

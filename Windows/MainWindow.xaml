@@ -28,6 +28,7 @@
         <Grid Width="auto" Grid.ColumnSpan="2" Grid.Row="0">
             <Menu>
                 <MenuItem Header="Main">
+                    <MenuItem Header="Take top X" Command="{Binding Path=TakeTopCommand}"/>
                     <MenuItem Header="Refresh" Command="{Binding Path=RefreshCommand}" />
                     <MenuItem Header="Show Dir" Command="{Binding Path=ShowDirCommand}"/>
                 </MenuItem>
