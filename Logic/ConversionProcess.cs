@@ -79,6 +79,7 @@ namespace Converter.Logic
                 "-flags:a +bitexact",
                 "-flags:v +bitexact",
                 "-map_metadata -1",
+                "-nostdin",
                 GetProcessingFileInfo().FullName,
             };
             var info = new ProcessStartInfo(binaryPath, string.Join(" ", args));
