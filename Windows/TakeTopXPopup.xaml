@@ -8,7 +8,7 @@
         Title="Take Top X..." Height="108" Width="172" WindowStyle="ToolWindow">
     <StackPanel Orientation="Vertical">
         <Label Content="Take top X files:"></Label>
-        <TextBox x:Name="number">10</TextBox>
+        <TextBox x:Name="number">1000</TextBox>
         <Button Click="Button_OK_Click">OK</Button>
     </StackPanel>
 </Window>
