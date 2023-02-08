@@ -43,7 +43,7 @@
                 <CheckBox Content="Queue Active" Margin="15,10,0,0" IsChecked="{Binding Path=QueueActive}"/>
                 <Label Content="{Binding Path=Summary}" Margin="10,5,0,0" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top"></Label>
             </StackPanel>
-            <ListView x:Name="FilesList" ItemsSource="{Binding Files}" Margin="10,40,0,10" KeyDown="FilesList_KeyDown" PreviewKeyDown="FilesList_PreviewKeyDown">
+            <ListView x:Name="FilesList" ItemsSource="{Binding Files}" Margin="10,40,0,10" PreviewKeyDown="FilesList_PreviewKeyDown">
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
                         <Setter Property="IsSelected" Value="{Binding IsSelected}" />

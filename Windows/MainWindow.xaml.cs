@@ -37,13 +37,6 @@ namespace Converter
             (DataContext as MainWindowVM).OnClosing(e);
         }
 
-
-
-        private void FilesList_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            
-        }
-
         private void FilesList_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Space || e.Key == System.Windows.Input.Key.S) {

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Documents;
 
 namespace Converter.Logic
@@ -81,7 +82,7 @@ namespace Converter.Logic
             };
             var info = new ProcessStartInfo(binaryPath, string.Join(" ", args));
             info.UseShellExecute = true;
-            info.WindowStyle = ProcessWindowStyle.Minimized;
+            info.WindowStyle = ProcessWindowStyle.Hidden;
             runningProcess = Process.Start(info);
             runningProcess.EnableRaisingEvents = true;
             runningProcess.Exited += (e, a) =>
@@ -96,7 +97,30 @@ namespace Converter.Logic
                 }
             };
             runningProcess.PriorityClass = ProcessPriorityClass.Idle;
-            windowHidden = false;
+            windowHidden = true;
+            Task.Run(ProcessAssertHasHandle);
+        }
+
+        private async Task ProcessAssertHasHandle() {
+            await Task.Delay(500);
+            if (runningProcess.HasExited) {
+                return;
+            }
+            var winHndl = WindowHelper.GetWindowHandle(runningProcess);
+            if (winHndl.HasValue)
+            {
+                WindowHelper.ShowWindow(winHndl.Value, WindowHelper.ShowWindowEnum.Show);
+                await Task.Delay(100);
+                runningProcess.Refresh();
+                logger.Log($"runningProcess.MainWindowHandle {runningProcess.MainWindowHandle}.");
+                await Task.Delay(100);
+                WindowHelper.ShowWindow(winHndl.Value, WindowHelper.ShowWindowEnum.Hide);
+           }
+            if (runningProcess.MainWindowHandle == IntPtr.Zero)
+            {
+                logger.Log($"No window hwnd for conversion process. Killing the process.");
+                runningProcess.Kill();
+            }
         }
 
         private void MoveToDone()
