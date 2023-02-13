@@ -22,6 +22,7 @@ namespace Converter.Logic
         private readonly ILogger logger;
         private Process runningProcess;
         private bool windowHidden;
+        private nint? windowHandle;
 
         public ConversionProcess(FileInfo sourceFile, int fps, ILogger logger) {
             sourceFI = sourceFile;
@@ -85,8 +86,10 @@ namespace Converter.Logic
             info.WindowStyle = ProcessWindowStyle.Hidden;
             runningProcess = Process.Start(info);
             runningProcess.EnableRaisingEvents = true;
+            windowHandle = WindowHelper.GetWindowHandle(runningProcess);
             runningProcess.Exited += (e, a) =>
             {
+                windowHandle = null;
                 if ((e as Process)?.ExitCode == 0)
                 {
                     MoveToDone();
@@ -98,29 +101,6 @@ namespace Converter.Logic
             };
             runningProcess.PriorityClass = ProcessPriorityClass.Idle;
             windowHidden = true;
-            Task.Run(ProcessAssertHasHandle);
-        }
-
-        private async Task ProcessAssertHasHandle() {
-            await Task.Delay(500);
-            if (runningProcess.HasExited) {
-                return;
-            }
-            var winHndl = WindowHelper.GetWindowHandle(runningProcess);
-            if (winHndl.HasValue)
-            {
-                WindowHelper.ShowWindow(winHndl.Value, WindowHelper.ShowWindowEnum.Show);
-                await Task.Delay(100);
-                runningProcess.Refresh();
-                logger.Log($"runningProcess.MainWindowHandle {runningProcess.MainWindowHandle}.");
-                await Task.Delay(100);
-                WindowHelper.ShowWindow(winHndl.Value, WindowHelper.ShowWindowEnum.Hide);
-           }
-            if (runningProcess.MainWindowHandle == IntPtr.Zero)
-            {
-                logger.Log($"No window hwnd for conversion process. Killing the process.");
-                runningProcess.Kill();
-            }
         }
 
         private void MoveToDone()
@@ -148,12 +128,19 @@ namespace Converter.Logic
         }
 
         public void ToggleWindow() {
-            if (runningProcess?.MainWindowHandle == null)
-            {
-                logger.Log("TOGGLE - Failed - No handle.");
+            if (runningProcess?.HasExited != false) {
+                logger.Log("TOGGLE - Failed - No runningProcess.");
                 return;
             }
-            var handle = runningProcess.MainWindowHandle.ToInt32();
+            if (!windowHandle.HasValue) {
+                windowHandle = WindowHelper.GetWindowHandle(runningProcess);
+                if (!windowHandle.HasValue)
+                {
+                    logger.Log("TOGGLE - Failed - No windowHandle.");
+                    return;
+                }
+            }
+            var handle = windowHandle.Value.ToInt32();
             logger.Log($"TOGGLE - windowHidden -> {!windowHidden} handle = {handle}.");
             WindowHelper.ShowWindow(handle, windowHidden ? WindowHelper.ShowWindowEnum.Show : WindowHelper.ShowWindowEnum.Hide);
             windowHidden = !windowHidden;
