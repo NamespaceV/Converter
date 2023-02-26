@@ -38,12 +38,15 @@
             </Menu>
         </Grid>
         <Grid Width="auto" Grid.Row="1" Grid.ColumnSpan="2">
-            <StackPanel Orientation="Horizontal">
-                <Button Content="Refresh" Command="{Binding Path=RefreshCommand}" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
-                <CheckBox Content="Queue Active" Margin="15,10,0,0" IsChecked="{Binding Path=QueueActive}"/>
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Refresh" Command="{Binding Path=RefreshCommand}" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
+                    <CheckBox Content="Queue Active" Margin="15,10,0,0" IsChecked="{Binding Path=QueueActive}"/>
+                    <Button Content="ToggleAll" Command="{Binding Path=ToggleAllCommand}" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" Height="25" Width="71"/>
+                </StackPanel>
                 <Label Content="{Binding Path=Summary}" Margin="10,5,0,0" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top"></Label>
             </StackPanel>
-            <ListView x:Name="FilesList" ItemsSource="{Binding Files}" Margin="10,40,0,10" PreviewKeyDown="FilesList_PreviewKeyDown">
+            <ListView x:Name="FilesList" ItemsSource="{Binding Files}" Margin="10,73,0,10" PreviewKeyDown="FilesList_PreviewKeyDown">
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
                         <Setter Property="IsSelected" Value="{Binding IsSelected}" />
@@ -64,6 +67,7 @@
                         <GridViewColumn Header="Actions" CellTemplate="{StaticResource Actions}"/>
                         <GridViewColumn Header="Start" DisplayMemberBinding="{Binding Path=Start, StringFormat=HH\\:mm\\(ss\\) dd\\-MM\\-yyyy}" Width="75"/>
                         <GridViewColumn Header="Finish" DisplayMemberBinding="{Binding Path=Finish, StringFormat=HH\\:mm\\(ss\\) dd\\-MM\\-yyyy}" Width="75"/>
+                        <GridViewColumn Header="Took" DisplayMemberBinding="{Binding Path=Took, StringFormat=hh\\:mm\\ \\(ss\\)}" Width="75"/>
                     </GridView>
                 </ListView.View>
             </ListView>

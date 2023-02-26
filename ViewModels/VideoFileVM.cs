@@ -33,6 +33,8 @@ namespace Converter.ViewModels
         public TimeSpan Duration { get; set; }
         public DateTimeOffset? Start { get; set; }
         public DateTimeOffset? Finish { get; set; }
+        public TimeSpan? Took { get; set; }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -72,6 +74,7 @@ namespace Converter.ViewModels
             {
                 Status = FileStatus.Failed;
                 Finish = DateTimeOffset.Now;
+                Took = Finish - Start;
 
                 logger.Log($"Error: exit code {exitCode} when processing {conversion.GetSourceFileInfo().Name}");
                 ToggleWindowCommand.SetEnabled(false);
@@ -79,6 +82,7 @@ namespace Converter.ViewModels
 
                 OnPropertyChanged(nameof(Status));
                 OnPropertyChanged(nameof(Finish));
+                OnPropertyChanged(nameof(Took));
             }));
         }
 
@@ -88,13 +92,15 @@ namespace Converter.ViewModels
             {
                 Status = FileStatus.Done;
                 Finish = DateTimeOffset.Now;
+                Took = Finish - Start;
 
                 logger.Log($"Finished processing {conversion.GetSourceFileInfo().Name}");
+                logger.Log($"Took: {Took}");
                 ToggleWindowCommand.SetEnabled(false);
                 OnPropertyChanged(nameof(Status));
                 OnPropertyChanged(nameof(Finish));
+                OnPropertyChanged(nameof(Took));
             }));
-
         }
 
         internal void Refresh()

@@ -24,8 +24,9 @@ namespace Converter.ViewModels
         public ICommand RefreshCommand { get; private set; }
         public ICommand ShowDirCommand { get; private set; }
         public ICommand TakeTopCommand { get; private set; }
+        public ICommand ToggleAllCommand { get; private set; }
         public ICommand AboutCommand { get; private set; }
-        public bool QueueActive { get; set; }
+        public bool QueueActive { get; set; } = true;
         public ILogger ExtraLogger { get; set; }
 
         public MainWindowVM(IconSwitcher switcher)
@@ -33,6 +34,7 @@ namespace Converter.ViewModels
             RefreshCommand = new SimpleCommand(RefreshList);
             AboutCommand = new SimpleCommand(ShowAbout);
             TakeTopCommand = new SimpleCommand(TakeTopX);
+            ToggleAllCommand = new SimpleCommand(ToggleAll);
             ShowDirCommand = new SimpleCommand(() => ConversionProcess.ShowProgressDir());
             ExtraLogger = new FileLogger();
             RefreshList();
@@ -138,6 +140,16 @@ namespace Converter.ViewModels
         {
             var selected = Files.Where(f => f.IsSelected);
             var allInQueue = selected.All(selected=> selected.InQueue);
+            foreach (var f in selected.Where(f => f.InQueue == allInQueue))
+            {
+                f.ToggleInQueue();
+            }
+        }
+
+        internal void ToggleAll()
+        {
+            var selected = Files;
+            var allInQueue = selected.All(selected => selected.InQueue);
             foreach (var f in selected.Where(f => f.InQueue == allInQueue))
             {
                 f.ToggleInQueue();
