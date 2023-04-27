@@ -21,6 +21,8 @@ namespace Converter.ViewModels
 
         public string Logs { get; set; } = "";
         public string Summary { get; set; }
+        public string FileFPS { get; set; }
+        public ICommand AddFilesCommand { get; private set; }
         public ICommand RefreshCommand { get; private set; }
         public ICommand ShowDirCommand { get; private set; }
         public ICommand TakeTopCommand { get; private set; }
@@ -31,6 +33,7 @@ namespace Converter.ViewModels
 
         public MainWindowVM(IconSwitcher switcher)
         {
+            AddFilesCommand = new SimpleCommand(AddFiles);
             RefreshCommand = new SimpleCommand(RefreshList);
             AboutCommand = new SimpleCommand(ShowAbout);
             TakeTopCommand = new SimpleCommand(TakeTopX);
@@ -70,6 +73,16 @@ namespace Converter.ViewModels
             {
                 ExtraLogger?.Log("App terminated while job was running.");
             }
+        }
+
+        private void AddFiles()
+        {
+            using var d = new System.Windows.Forms.FolderBrowserDialog();
+            var r = d.ShowDialog();
+            if (r != System.Windows.Forms.DialogResult.OK) {
+                return;
+            }
+            MessageBox.Show( d.SelectedPath+"\n\n"+FileFPS, "Set dir");
         }
 
         private void RefreshList()

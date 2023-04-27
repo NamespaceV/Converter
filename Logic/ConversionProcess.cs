@@ -36,7 +36,6 @@ namespace Converter.Logic
             return f.Properties.Duration;
         }
 
-
         public FileInfo GetSourceFileInfo()
         {
             return sourceFI;
@@ -75,7 +74,7 @@ namespace Converter.Logic
                 "-preset 4",
                 "-crf 60",
                 "-pix_fmt yuv420p10le",
-                "-svtav1-params tune=0",
+                "-svtav1-params tune=0:film-grain=0",
                 $"-g {fps * 30}",
                 $"-r {fps}",
                 "-nostdin",

@@ -48,7 +48,7 @@ namespace Converter.ViewModels
                 : new ConversionProcess(source, fps, logger);
             this.fps = fps;
             this.logger = logger;
-            Duration = conversion.GetVideoDuration();
+            //Duration = conversion.GetVideoDuration();
             ConvertCommand = new SimpleCommand(Convert);
             ToggleWindowCommand = new SimpleCommand(() => conversion.ToggleWindow());
             Refresh();

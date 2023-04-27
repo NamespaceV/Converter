@@ -11,7 +11,7 @@ namespace Converter.Logic
 
     internal class FileListHelper
     {
-        private static List<int> supportedFPS = new List<int>() { 30, 60 };
+        private static List<int> supportedFPS = new List<int>() { 24, 30, 60 };
 
         internal static List<SourceFile> ListInputFiles()
         {
