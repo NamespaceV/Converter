@@ -10,8 +10,8 @@ namespace Converter.Logic
     {
         private Task task;
 
-        public ConversionProcessFake(FileInfo sourceFile, int fps, ILogger logger)
-            : base(sourceFile, fps, logger)
+        public ConversionProcessFake(IFileLister fileLister, FileInfo sourceFile, int fps, ILogger logger)
+            : base(fileLister, sourceFile, fps, logger)
         {
         }
 

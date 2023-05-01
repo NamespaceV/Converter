@@ -13,10 +13,11 @@ namespace Converter
         private ImageSource _activeIcon;
         private ImageSource _passiveIcon;
 
-        public MainWindow()
+        public MainWindow(MainWindowVM vm)
         {
             InitializeComponent();
-            DataContext = new MainWindowVM(this);
+            DataContext = vm;
+            vm.SetIconSwitcher(this);
             
             _passiveIcon = Icon;
             _activeIcon = LoadActiveIcon();

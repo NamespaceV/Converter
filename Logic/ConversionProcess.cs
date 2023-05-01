@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Documents;
 
 namespace Converter.Logic
 {
@@ -17,6 +15,7 @@ namespace Converter.Logic
 
     internal class ConversionProcess
     {
+        private readonly IFileLister fileLister;
         private readonly FileInfo sourceFI;
         private readonly int fps;
         private readonly ILogger logger;
@@ -24,7 +23,8 @@ namespace Converter.Logic
         private bool windowHidden;
         private nint? windowHandle;
 
-        public ConversionProcess(FileInfo sourceFile, int fps, ILogger logger) {
+        public ConversionProcess(IFileLister fileLister, FileInfo sourceFile, int fps, ILogger logger) {
+            this.fileLister = fileLister;
             sourceFI = sourceFile;
             this.fps = fps;
             this.logger = logger;
@@ -43,15 +43,13 @@ namespace Converter.Logic
 
         public FileInfo GetProcessingFileInfo()
         {
-            var outDir = new DirectoryInfo(SettingsProivider.GetBasePath).EnumerateDirectories()
-                .Single(d => d.Name.ToLowerInvariant() == "processing").FullName;
+            var outDir = fileLister.GetProcessingDirectory().FullName;
             return new FileInfo(Path.Combine(outDir, Path.GetFileNameWithoutExtension(sourceFI.Name) + ".webm"));
         }
 
         public FileInfo GetOutputFileInfo()
         {
-            var outDir = new DirectoryInfo(SettingsProivider.GetBasePath).EnumerateDirectories()
-                .Single(d => d.Name.ToLowerInvariant() == "output").FullName;
+            var outDir = fileLister.GetOutputDirectory().FullName;
             return new FileInfo(Path.Combine(outDir, Path.GetFileNameWithoutExtension(sourceFI.Name) + ".webm"));
         }
 
@@ -61,8 +59,7 @@ namespace Converter.Logic
                 logger.Log($"Ignored!!! Conversion for {sourceFI.Name} already running.");
                 return;
             }
-            var binaryPath = new DirectoryInfo(SettingsProivider.GetBasePath).GetFiles()
-                .Single(f => f.Name == "ffmpeg.exe").FullName;
+            var binaryPath = fileLister.GetBinaryFileFFMPG();
             //binaryPath = "notepad.exe";
             var args = new List<string>()
             {
@@ -80,7 +77,7 @@ namespace Converter.Logic
                 "-nostdin",
                 GetProcessingFileInfo().FullName,
             };
-            var info = new ProcessStartInfo(binaryPath, string.Join(" ", args));
+            var info = new ProcessStartInfo(binaryPath.FullName, string.Join(" ", args));
             info.UseShellExecute = true;
             info.WindowStyle = ProcessWindowStyle.Hidden;
             runningProcess = Process.Start(info);

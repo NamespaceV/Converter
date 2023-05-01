@@ -1,11 +1,23 @@
-﻿using System.Windows;
+﻿using Converter.Logic;
+using Converter.ViewModels;
+using Prism.Ioc;
+using Prism.Unity;
+using System.Windows;
 
 namespace Converter
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
+    public partial class App : PrismApplication
     {
+        protected override void RegisterTypes(IContainerRegistry containerRegistry)
+        {
+            containerRegistry.RegisterSingleton<MainWindow, MainWindow>();
+            containerRegistry.RegisterSingleton<MainWindowVM, MainWindowVM>();
+            containerRegistry.RegisterSingleton<IFileLister, FileLister>();
+        }
+
+        protected override Window CreateShell()
+        {
+            return Container.Resolve<MainWindow>();
+        }
     }
 }

@@ -1,27 +1,34 @@
 ﻿using Converter.Basic;
 using Converter.icon;
 using Converter.Logic;
+using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 
 namespace Converter.ViewModels
 {
-    public class MainWindowVM : INotifyPropertyChanged, ILogger
+    public class MainWindowVM : BindableBase, ILogger
     {
-        private readonly IconSwitcher switcher;
-
-        public event PropertyChangedEventHandler PropertyChanged;
+        private IconSwitcher switcher;
 
         public List<VideoFileVM> Files { get; set; } = new List<VideoFileVM>();
 
         public string Logs { get; set; } = "";
         public string Summary { get; set; }
-        public string FileFPS { get; set; }
+        private string fileFps;
+        public string FileFPS
+        {
+            get { return fileFps; }
+            set {
+                SetProperty(ref fileFps, value); 
+                RefreshList();
+            }
+        }
+        public string WorkingBasePath { get; set; }
         public ICommand AddFilesCommand { get; private set; }
         public ICommand RefreshCommand { get; private set; }
         public ICommand ShowDirCommand { get; private set; }
@@ -30,8 +37,9 @@ namespace Converter.ViewModels
         public ICommand AboutCommand { get; private set; }
         public bool QueueActive { get; set; } = true;
         public ILogger ExtraLogger { get; set; }
+        public IFileLister FileLister { get; }
 
-        public MainWindowVM(IconSwitcher switcher)
+        public MainWindowVM(IFileLister fileLister)
         {
             AddFilesCommand = new SimpleCommand(AddFiles);
             RefreshCommand = new SimpleCommand(RefreshList);
@@ -40,7 +48,12 @@ namespace Converter.ViewModels
             ToggleAllCommand = new SimpleCommand(ToggleAll);
             ShowDirCommand = new SimpleCommand(() => ConversionProcess.ShowProgressDir());
             ExtraLogger = new FileLogger();
+            FileLister = fileLister;
             RefreshList();
+        }
+
+        internal void SetIconSwitcher(IconSwitcher switcher)
+        {
             this.switcher = switcher;
         }
 
@@ -82,14 +95,29 @@ namespace Converter.ViewModels
             if (r != System.Windows.Forms.DialogResult.OK) {
                 return;
             }
-            MessageBox.Show( d.SelectedPath+"\n\n"+FileFPS, "Set dir");
+            WorkingBasePath = d.SelectedPath;
+            RefreshList();
+        }
+
+        private void UpdateFilterDir()
+        {
+            if (!int.TryParse(FileFPS, out var fpsInt))
+            {
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(WorkingBasePath)) {
+                return;
+            }
+            var dir = new System.IO.DirectoryInfo(WorkingBasePath);
+            FileLister.SetDirectoryAndFps(dir, fpsInt);
         }
 
         private void RefreshList()
         {
+            UpdateFilterDir();
             var newFiles = new List<VideoFileVM>();
             var oldFiles = Files;
-            foreach (var f in FileListHelper.ListInputFiles())
+            foreach (var f in FileLister.ListFiles())
             {
                 var match = oldFiles.Find(of => of.Matches(f.FileInfo));
                 if (match != null)
@@ -99,14 +127,14 @@ namespace Converter.ViewModels
                 }
                 else
                 {
-                    newFiles.Add(new VideoFileVM(f.FileInfo, f.Fps, this));
+                    newFiles.Add(new VideoFileVM(FileLister, f.FileInfo, f.Fps, this));
                 }
             }
             Files = newFiles;
             foreach (var f in newFiles) {
                 f.PropertyChanged += (o, e) => UpdateSummary();
             }
-            OnPropertyChanged(nameof(Files));
+            RaisePropertyChanged(nameof(Files));
             UpdateSummary();
         }
 
@@ -124,12 +152,7 @@ namespace Converter.ViewModels
                 var next = Files.FirstOrDefault(f => f.InQueue && f.Status == FileStatus.Found);
                 next?.ConvertCommand.Execute(null);
             }
-            OnPropertyChanged(nameof(Summary));
-        }
-
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            RaisePropertyChanged(nameof(Summary));
         }
 
         public void Log(string s)
@@ -138,14 +161,14 @@ namespace Converter.ViewModels
                 Logs += "\n";
             }
             Logs += $"[{DateTime.Now.ToString("HH:mm")}] {s}";
-            OnPropertyChanged(nameof(Logs));
+            RaisePropertyChanged(nameof(Logs));
             ExtraLogger?.Log(s);
         }
 
         public void LogSameLine(string s)
         {
             Logs += $"{s}";
-            OnPropertyChanged(nameof(Logs));
+            RaisePropertyChanged(nameof(Logs));
             ExtraLogger?.LogSameLine(s);
         }
 
@@ -174,5 +197,6 @@ namespace Converter.ViewModels
             foreach (var f in Files.Take(cnt)) { f.InQueue = true; }
             foreach (var f in Files.Skip(cnt)) { f.InQueue = false; }
         }
+
     }
 }

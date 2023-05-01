@@ -23,6 +23,7 @@ namespace Converter.ViewModels
     public class VideoFileVM : INotifyPropertyChanged
     {
         private ConversionProcess conversion;
+        private readonly IFileLister fileLister;
         private readonly int fps;
         private readonly ILogger logger;
 
@@ -41,11 +42,12 @@ namespace Converter.ViewModels
         public SimpleCommand ConvertCommand { get; private set; }
         public SimpleCommand ToggleWindowCommand { get; private set; }
 
-        public VideoFileVM(FileInfo source, int fps, ILogger logger)
+        public VideoFileVM(IFileLister fileLister, FileInfo source, int fps, ILogger logger)
         {
             conversion = SettingsProivider.UseFakeConversion
-                ? new ConversionProcessFake(source, fps, logger)
-                : new ConversionProcess(source, fps, logger);
+                ? new ConversionProcessFake(fileLister, source, fps, logger)
+                : new ConversionProcess(fileLister, source, fps, logger);
+            this.fileLister = fileLister;
             this.fps = fps;
             this.logger = logger;
             //Duration = conversion.GetVideoDuration();
