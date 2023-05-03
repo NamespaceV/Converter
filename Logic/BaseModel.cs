@@ -64,4 +64,52 @@ namespace Converter.Logic
             return string.Join(" ", args);
         }
     }
+
+    internal class CustomParamsBuilder : IConversionParamsBuilder
+    {
+        private string input;
+        private string output;
+        private int? fps;
+        private string fFMpegParams;
+
+        public CustomParamsBuilder(string fFMpegParams)
+        {
+            this.fFMpegParams = fFMpegParams;
+        }
+
+        public IConversionParamsBuilder SetInputFile(string input) { this.input = input; return this; }
+        public IConversionParamsBuilder SetOutputFile(string output) { this.output = output; return this; }
+        public IConversionParamsBuilder SetFps(int fps) { this.fps = fps; return this; }
+
+        public string Build()
+        {
+            if (!fps.HasValue) throw new System.Exception("fps not set");
+            if (input == null) throw new System.Exception("input not set");
+            if (output == null) throw new System.Exception("output not set");
+            //            var args = new List<string>()
+            //            {
+            //                $"-i \"{input}\"",
+            //                "-c:a libopus",
+            //                "-b:a 16k",
+            ////                "-b:a 64k",
+            //                "-frame_duration 60",
+            //                "-c:v libsvtav1",
+            //                "-preset 4",
+            //                "-crf 60",
+            //                "-pix_fmt yuv420p10le",
+            //                "-svtav1-params tune=0:film-grain=0",
+            //                $"-g 720",
+            ////                $"-g {fps * 30}",
+            ////                $"-r {fps}",
+            //                "-nostdin",
+            //                $"\"{output}\"",
+            //            };
+            var r = fFMpegParams
+                .Replace("{input}", $"\"{input}\"")
+                .Replace("{output}", $"\"{output}\"")
+                .Replace("{fps}", $"\"{fps}\"")
+                .Replace("{fpsG}", $"\"{fps * 30}\"");
+            return r;
+        }
+    }
 }

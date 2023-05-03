@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Collections.Generic;
+using System.Windows;
 
 namespace Converter.Windows
 {
@@ -9,7 +10,25 @@ namespace Converter.Windows
         public TextInputWindow()
         {
             InitializeComponent();
-            TextInput.Text = "-c:a libopus -b:a 64k -frame_duration 60 -c:v libsvtav1 -preset 4 -crf 60 -pix_fmt yuv420p10le -svtav1-params tune=0:film-grain=0 -g {fpsG} -r {fps}";
+            var args = new List<string>{
+                "-i {input}",
+                "-c:a libopus",
+                "-b:a 16k",
+//                "-b:a 64k",
+                "-frame_duration 60",
+                "-c:v libsvtav1",
+                "-preset 4",
+                "-crf 60",
+                "-pix_fmt yuv420p10le",
+                "-svtav1-params tune=0:film-grain=0",
+                "-g 720",
+                "-g {fpsG}", // fps * 30 see class CustomParamsBuilder
+                "-r {fps}",
+                "-nostdin",
+                "{output}",
+            };
+            TextInput.Text = string.Join(" ", args);
+            //TextInput.Text = "-c:a libopus -b:a 64k -frame_duration 60 -c:v libsvtav1 -preset 4 -crf 60 -pix_fmt yuv420p10le -svtav1-params tune=0:film-grain=0 -g {fpsG} -r {fps}";
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -17,5 +36,6 @@ namespace Converter.Windows
             Result = TextInput.Text;
             DialogResult = true;
         }
+
     }
 }

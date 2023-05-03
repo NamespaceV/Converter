@@ -120,6 +120,7 @@ namespace Converter.ViewModels
                 return;
             }
             FFMpegParams = d.Result;
+            BaseModel.ConversionCommandParamsBuilder = () => new CustomParamsBuilder(FFMpegParams);
         }
 
         private void UpdateFilterDir()
@@ -219,6 +220,5 @@ namespace Converter.ViewModels
             foreach (var f in Files.Take(cnt)) { f.InQueue = true; }
             foreach (var f in Files.Skip(cnt)) { f.InQueue = false; }
         }
-
     }
 }

@@ -36,6 +36,9 @@
                     <MenuItem Header="Refresh" Command="{Binding Path=RefreshCommand}" />
                     <MenuItem Header="Show Dir" Command="{Binding Path=ShowDirCommand}"/>
                 </MenuItem>
+                <MenuItem Header="FFMPEG">
+                    <MenuItem Header="Change arguments" Command="{Binding Path=SetParamsCommand}"/>
+                </MenuItem>
                 <MenuItem Header="About">
                     <MenuItem Header="About" Command="{Binding Path=AboutCommand}"/>
                 </MenuItem>

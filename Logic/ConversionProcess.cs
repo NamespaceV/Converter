@@ -38,7 +38,7 @@ namespace Converter.Logic
 
         public TimeSpan GetVideoDuration()
         {
-            var f = TagLib.File.Create(sourceFI.FullName);
+            using var f = TagLib.File.Create(sourceFI.FullName);
             return f.Properties.Duration;
         }
 
