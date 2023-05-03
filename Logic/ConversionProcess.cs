@@ -63,19 +63,21 @@ namespace Converter.Logic
             //binaryPath = "notepad.exe";
             var args = new List<string>()
             {
-                $"-i {sourceFI.FullName}",
+                $"-i \"{sourceFI.FullName}\"",
                 "-c:a libopus",
-                "-b:a 64k",
+                "-b:a 16k",
+//                "-b:a 64k",
                 "-frame_duration 60",
                 "-c:v libsvtav1",
                 "-preset 4",
                 "-crf 60",
                 "-pix_fmt yuv420p10le",
                 "-svtav1-params tune=0:film-grain=0",
-                $"-g {fps * 30}",
-                $"-r {fps}",
+                $"-g 720",
+//                $"-g {fps * 30}",
+//                $"-r {fps}",
                 "-nostdin",
-                GetProcessingFileInfo().FullName,
+                $"\"{GetProcessingFileInfo().FullName}\"",
             };
             var info = new ProcessStartInfo(binaryPath.FullName, string.Join(" ", args));
             info.UseShellExecute = true;

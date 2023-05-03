@@ -1,6 +1,7 @@
 ﻿using Converter.Basic;
 using Converter.icon;
 using Converter.Logic;
+using Converter.Windows;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -29,7 +30,9 @@ namespace Converter.ViewModels
             }
         }
         public string WorkingBasePath { get; set; }
+        public string FFMpegParams { get; set; }
         public ICommand AddFilesCommand { get; private set; }
+        public ICommand SetParamsCommand { get; private set; }
         public ICommand RefreshCommand { get; private set; }
         public ICommand ShowDirCommand { get; private set; }
         public ICommand TakeTopCommand { get; private set; }
@@ -42,6 +45,7 @@ namespace Converter.ViewModels
         public MainWindowVM(IFileLister fileLister)
         {
             AddFilesCommand = new SimpleCommand(AddFiles);
+            SetParamsCommand = new SimpleCommand(SetParams);
             RefreshCommand = new SimpleCommand(RefreshList);
             AboutCommand = new SimpleCommand(ShowAbout);
             TakeTopCommand = new SimpleCommand(TakeTopX);
@@ -97,6 +101,17 @@ namespace Converter.ViewModels
             }
             WorkingBasePath = d.SelectedPath;
             RefreshList();
+        }
+
+        private void SetParams()
+        {
+            var d = new TextInputWindow();
+            var r = d.ShowDialog();
+            if (r != true)
+            {
+                return;
+            }
+            FFMpegParams = d.Result;
         }
 
         private void UpdateFilterDir()

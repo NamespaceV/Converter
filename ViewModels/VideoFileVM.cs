@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.IO;
-using System.Diagnostics;
 using System;
 using Converter.Basic;
 using Converter.Logic;
@@ -23,7 +22,6 @@ namespace Converter.ViewModels
     public class VideoFileVM : INotifyPropertyChanged
     {
         private ConversionProcess conversion;
-        private readonly IFileLister fileLister;
         private readonly int fps;
         private readonly ILogger logger;
 
@@ -47,7 +45,6 @@ namespace Converter.ViewModels
             conversion = SettingsProivider.UseFakeConversion
                 ? new ConversionProcessFake(fileLister, source, fps, logger)
                 : new ConversionProcess(fileLister, source, fps, logger);
-            this.fileLister = fileLister;
             this.fps = fps;
             this.logger = logger;
             //Duration = conversion.GetVideoDuration();
