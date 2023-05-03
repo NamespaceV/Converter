@@ -113,7 +113,7 @@ namespace Converter.ViewModels
 
         private void SetParams()
         {
-            var d = new TextInputWindow();
+            var d = new TextInputWindow(FFMpegParams);
             var r = d.ShowDialog();
             if (r != true)
             {
