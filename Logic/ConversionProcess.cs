@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows;
 
 namespace Converter.Logic
 {
@@ -34,12 +35,6 @@ namespace Converter.Logic
             sourceFI = sourceFile;
             this.fps = fps;
             this.logger = logger;
-        }
-
-        public TimeSpan GetVideoDuration()
-        {
-            using var f = TagLib.File.Create(sourceFI.FullName);
-            return f.Properties.Duration;
         }
 
         public FileInfo GetSourceFileInfo()

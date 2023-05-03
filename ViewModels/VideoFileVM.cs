@@ -22,6 +22,7 @@ namespace Converter.ViewModels
     public class VideoFileVM : INotifyPropertyChanged
     {
         private ConversionProcess conversion;
+        private readonly FileInfo source;
         private readonly int fps;
         private readonly ILogger logger;
 
@@ -43,6 +44,7 @@ namespace Converter.ViewModels
         public VideoFileVM(ConversionFactory conversionFactory, FileInfo source, int fps, ILogger logger)
         {
             conversion = conversionFactory.CreateConversionFor(source, fps, logger);
+            this.source = source;
             this.fps = fps;
             this.logger = logger;
             ConvertCommand = new SimpleCommand(Convert);
@@ -52,8 +54,7 @@ namespace Converter.ViewModels
 
         private void Convert()
         {
-            Duration = conversion.GetVideoDuration();
-            OnPropertyChanged(nameof(Duration));
+            CheckVideoDuration();
 
             logger.Log($"Converting {conversion.GetSourceFileInfo().FullName} -> {conversion.GetProcessingFileInfo().FullName}");
             conversion.StartConversionProcess(OnProcessingSuccess, OnProcessingFailed);
@@ -62,9 +63,26 @@ namespace Converter.ViewModels
             Finish = null;
             ConvertCommand.SetEnabled(false);
             ToggleWindowCommand.SetEnabled(true);
+
+            OnPropertyChanged(nameof(Duration));
             OnPropertyChanged(nameof(Status));
             OnPropertyChanged(nameof(Start));
             OnPropertyChanged(nameof(Finish));
+        }
+
+
+        public void CheckVideoDuration()
+        {
+            if (Duration.HasValue)
+            {
+                return;
+            }
+            try
+            {
+                using var f = TagLib.File.Create(source.FullName);
+                Duration = f.Properties.Duration;
+            }
+            catch { }
         }
 
         private void OnProcessingFailed(int? exitCode)
