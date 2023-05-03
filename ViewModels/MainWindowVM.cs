@@ -125,7 +125,7 @@ namespace Converter.ViewModels
 
         private void UpdateFilterDir()
         {
-            if (!int.TryParse(FileFPS, out var fpsInt))
+            if (int.TryParse(FileFPS, out var fpsInt))
             {
                 FileLister.SetFps(fpsInt);
             }
