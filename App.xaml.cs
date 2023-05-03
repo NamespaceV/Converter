@@ -12,7 +12,12 @@ namespace Converter
         {
             containerRegistry.RegisterSingleton<MainWindow, MainWindow>();
             containerRegistry.RegisterSingleton<MainWindowVM, MainWindowVM>();
+
+            containerRegistry.RegisterSingleton<IBaseModel, BaseModel>();
             containerRegistry.RegisterSingleton<IFileLister, FileLister>();
+            containerRegistry.RegisterSingleton<FileLogger>();
+            containerRegistry.RegisterSingleton<ConversionFactory>();
+
         }
 
         protected override Window CreateShell()

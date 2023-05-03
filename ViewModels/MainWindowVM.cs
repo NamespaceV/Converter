@@ -40,9 +40,15 @@ namespace Converter.ViewModels
         public ICommand AboutCommand { get; private set; }
         public bool QueueActive { get; set; } = true;
         public ILogger ExtraLogger { get; set; }
+        public ConversionFactory ConversionFactory { get; }
         public IFileLister FileLister { get; }
+        public IBaseModel BaseModel { get; }
 
-        public MainWindowVM(IFileLister fileLister)
+        public MainWindowVM(
+            IFileLister fileLister,
+            IBaseModel baseModel,
+            FileLogger logger,
+            ConversionFactory conversionFactory)
         {
             AddFilesCommand = new SimpleCommand(AddFiles);
             SetParamsCommand = new SimpleCommand(SetParams);
@@ -50,9 +56,11 @@ namespace Converter.ViewModels
             AboutCommand = new SimpleCommand(ShowAbout);
             TakeTopCommand = new SimpleCommand(TakeTopX);
             ToggleAllCommand = new SimpleCommand(ToggleAll);
-            ShowDirCommand = new SimpleCommand(() => ConversionProcess.ShowProgressDir());
-            ExtraLogger = new FileLogger();
+            ShowDirCommand = new SimpleCommand(() => ConversionProcess.ShowProgressDir(baseModel));
+            ExtraLogger = logger;
+            ConversionFactory = conversionFactory;
             FileLister = fileLister;
+            BaseModel = baseModel;
             RefreshList();
         }
 
@@ -118,13 +126,12 @@ namespace Converter.ViewModels
         {
             if (!int.TryParse(FileFPS, out var fpsInt))
             {
-                return;
+                FileLister.SetFps(fpsInt);
             }
-            if (string.IsNullOrWhiteSpace(WorkingBasePath)) {
-                return;
+            if (!string.IsNullOrWhiteSpace(WorkingBasePath)) {
+                var dir = new System.IO.DirectoryInfo(WorkingBasePath);
+                FileLister.SetDirectory(dir);
             }
-            var dir = new System.IO.DirectoryInfo(WorkingBasePath);
-            FileLister.SetDirectoryAndFps(dir, fpsInt);
         }
 
         private void RefreshList()
@@ -142,7 +149,7 @@ namespace Converter.ViewModels
                 }
                 else
                 {
-                    newFiles.Add(new VideoFileVM(FileLister, f.FileInfo, f.Fps, this));
+                    newFiles.Add(new VideoFileVM(ConversionFactory, f.FileInfo, f.Fps, this));
                 }
             }
             Files = newFiles;
@@ -159,8 +166,8 @@ namespace Converter.ViewModels
             var inQueue = Files.Where(f => f.InQueue && (f.Status == FileStatus.Running || f.Status == FileStatus.Found));
 
             Summary =
-                  $"{Files.Count} files -> {Files.Select(f => f.Duration).Aggregate(new TimeSpan(), (a, b) => a.Add(b)).ToString("hh\\:mm\\ \\(ss\\)")} total length"
-                + $" || In queue {inQueue.Count()} -> {inQueue.Select(f => f.Duration).Aggregate(new TimeSpan(), (a, b) => a.Add(b)).ToString("hh\\:mm\\ \\(ss\\)")} total length"
+                  $"{Files.Count} files -> {Files.Select(f => f.Duration ?? new TimeSpan()).Aggregate(new TimeSpan(), (a, b) => a.Add(b)).ToString("hh\\:mm\\ \\(ss\\)")} total length"
+                + $" || In queue {inQueue.Count()} -> {inQueue.Select(f => f.Duration  ?? new TimeSpan()).Aggregate(new TimeSpan(), (a, b) => a.Add(b)).ToString("hh\\:mm\\ \\(ss\\)")} total length"
                 + $" || Running: {activeCount}";
             switcher?.SetActiveIcon(activeCount > 0);
             if (QueueActive && activeCount == 0) {

@@ -29,7 +29,7 @@ namespace Converter.ViewModels
         public bool InQueue { get => inQueue; set { inQueue = value; OnPropertyChanged(nameof(InQueue)); }}
         public bool IsSelected { get; set; }
         public FileStatus Status { get; set; }
-        public TimeSpan Duration { get; set; }
+        public TimeSpan? Duration { get; set; }
         public DateTimeOffset? Start { get; set; }
         public DateTimeOffset? Finish { get; set; }
         public TimeSpan? Took { get; set; }
@@ -40,14 +40,11 @@ namespace Converter.ViewModels
         public SimpleCommand ConvertCommand { get; private set; }
         public SimpleCommand ToggleWindowCommand { get; private set; }
 
-        public VideoFileVM(IFileLister fileLister, FileInfo source, int fps, ILogger logger)
+        public VideoFileVM(ConversionFactory conversionFactory, FileInfo source, int fps, ILogger logger)
         {
-            conversion = SettingsProivider.UseFakeConversion
-                ? new ConversionProcessFake(fileLister, source, fps, logger)
-                : new ConversionProcess(fileLister, source, fps, logger);
+            conversion = conversionFactory.CreateConversionFor(source, fps, logger);
             this.fps = fps;
             this.logger = logger;
-            //Duration = conversion.GetVideoDuration();
             ConvertCommand = new SimpleCommand(Convert);
             ToggleWindowCommand = new SimpleCommand(() => conversion.ToggleWindow());
             Refresh();
@@ -55,6 +52,9 @@ namespace Converter.ViewModels
 
         private void Convert()
         {
+            Duration = conversion.GetVideoDuration();
+            OnPropertyChanged(nameof(Duration));
+
             logger.Log($"Converting {conversion.GetSourceFileInfo().FullName} -> {conversion.GetProcessingFileInfo().FullName}");
             conversion.StartConversionProcess(OnProcessingSuccess, OnProcessingFailed);
             Status = FileStatus.Running;

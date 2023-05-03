@@ -6,7 +6,8 @@ namespace Converter.Logic
 {
     public interface IFileLister
     {
-        bool SetDirectoryAndFps(DirectoryInfo directory, int fps);
+        bool SetDirectory(DirectoryInfo directory);
+        bool SetFps(int? fps);
 
         List<SourceFile> ListFiles();
         FileInfo GetBinaryFileFFMPG();
@@ -16,81 +17,66 @@ namespace Converter.Logic
 
     public class FileLister : IFileLister
     {
-        private DirectoryInfo dir;
-        private int fps;
+        private int? fps;
+
+        private IBaseModel BaseModel { get; }
+
+        public FileLister(IBaseModel baseModel)
+        {
+            BaseModel = baseModel;
+        }
 
         public FileInfo GetBinaryFileFFMPG()
         {
-            return new DirectoryInfo(SettingsProivider.GetBasePath).GetFiles()
-                 .Single(f => f.Name == "ffmpeg.exe");
+            return BaseModel.FfmpegBinary;
         }
 
         public DirectoryInfo GetProcessingDirectory()
         {
-            if (dir == null) {
-                return new DirectoryInfo(SettingsProivider.GetBasePath)
-                    .EnumerateDirectories()
-                    .Single(d => d.Name.ToLowerInvariant() == "processing");
-            }
-            return dir.EnumerateDirectories()
+            return BaseModel.DataFilesDir.EnumerateDirectories()
                 .Single(d => d.Name.ToLowerInvariant() == "processing");
         }
 
         public DirectoryInfo GetOutputDirectory()
         {
-            if (dir == null)
-            {
-                return new DirectoryInfo(SettingsProivider.GetBasePath)
-                    .EnumerateDirectories()
-                    .Single(d => d.Name.ToLowerInvariant() == "output");
-            }
-            return dir.EnumerateDirectories()
-                .Single(d => d.Name.ToLowerInvariant() == "output");
+            return BaseModel.DataFilesDir.EnumerateDirectories()
+               .Single(d => d.Name.ToLowerInvariant() == "output");
         }
 
         public List<SourceFile> ListFiles()
         {
-            if (dir == null || fps == 0)
-            {
-                return ListInputFilesDefault();
-            }
-
-            var result = new List<SourceFile>();
-
-            result = dir
-                .EnumerateDirectories()
-                .Single(d => d.Name.ToLowerInvariant() == "input" + fps.ToString())
-                .EnumerateFiles()
-                .Select(f => new SourceFile() { Fps = fps, FileInfo = f })
-                .ToList();
-
-            return result;
-        }
-
-        public bool SetDirectoryAndFps(DirectoryInfo directory, int fps)
-        {
-            dir = directory;
-            this.fps = fps;
-            return true;
-        }
-
-        private List<SourceFile> ListInputFilesDefault()
-        {
             var supportedFPS = new List<int>() { 24, 30, 60 };
+            if (fps.HasValue && !supportedFPS.Contains(fps.Value))
+            {
+                supportedFPS.Add(fps.Value);
+            }
 
             var result = new List<SourceFile>();
             foreach (var fps in supportedFPS)
             {
 
-                var files = new DirectoryInfo(SettingsProivider.GetBasePath)
+                var files = BaseModel.DataFilesDir
                     .EnumerateDirectories()
-                    .Single(d => d.Name.ToLowerInvariant() == "input" + fps.ToString())
-                    .EnumerateFiles()
+                    .SingleOrDefault(d => d.Name.ToLowerInvariant() == "input" + fps.ToString())
+                    ?.EnumerateFiles()
                     .Select(f => new SourceFile() { Fps = fps, FileInfo = f });
-                result.AddRange(files);
+                if (files != null) {
+                    result.AddRange(files);
+                }
             }
             return result;
         }
 
+        public bool SetDirectory(DirectoryInfo directory)
+        {
+            BaseModel.DataFilesDir = directory;
+            return true;
+        }
+
+        public bool SetFps(int? fps )
+        {
+            this.fps = fps;
+            return true;
+        }
     }
 }

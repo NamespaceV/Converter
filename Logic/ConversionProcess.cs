@@ -1,20 +1,20 @@
 ﻿using Converter.Basic;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
 namespace Converter.Logic
 {
-    public enum ConversionStatusEnum { 
+    public enum ConversionStatusEnum {
         NotStarted,
         Corrupted,
         Unknown
     }
 
-    internal class ConversionProcess
+    public class ConversionProcess
     {
+        private readonly IBaseModel baseModel;
         private readonly IFileLister fileLister;
         private readonly FileInfo sourceFI;
         private readonly int fps;
@@ -23,7 +23,13 @@ namespace Converter.Logic
         private bool windowHidden;
         private nint? windowHandle;
 
-        public ConversionProcess(IFileLister fileLister, FileInfo sourceFile, int fps, ILogger logger) {
+        public ConversionProcess(
+                IBaseModel baseModel,
+                IFileLister fileLister,
+                FileInfo sourceFile,
+                int fps,
+                ILogger logger) {
+            this.baseModel = baseModel;
             this.fileLister = fileLister;
             sourceFI = sourceFile;
             this.fps = fps;
@@ -61,25 +67,12 @@ namespace Converter.Logic
             }
             var binaryPath = fileLister.GetBinaryFileFFMPG();
             //binaryPath = "notepad.exe";
-            var args = new List<string>()
-            {
-                $"-i \"{sourceFI.FullName}\"",
-                "-c:a libopus",
-                "-b:a 16k",
-//                "-b:a 64k",
-                "-frame_duration 60",
-                "-c:v libsvtav1",
-                "-preset 4",
-                "-crf 60",
-                "-pix_fmt yuv420p10le",
-                "-svtav1-params tune=0:film-grain=0",
-                $"-g 720",
-//                $"-g {fps * 30}",
-//                $"-r {fps}",
-                "-nostdin",
-                $"\"{GetProcessingFileInfo().FullName}\"",
-            };
-            var info = new ProcessStartInfo(binaryPath.FullName, string.Join(" ", args));
+            var args = baseModel.ConversionCommandParamsBuilder()
+                .SetFps(fps)
+                .SetInputFile(sourceFI.FullName)
+                .SetOutputFile(GetProcessingFileInfo().FullName)
+                .Build();
+            var info = new ProcessStartInfo(binaryPath.FullName, args);
             info.UseShellExecute = true;
             info.WindowStyle = ProcessWindowStyle.Hidden;
             runningProcess = Process.Start(info);
@@ -144,8 +137,8 @@ namespace Converter.Logic
             windowHidden = !windowHidden;
         }
 
-        public static void ShowProgressDir() {
-            var outDir = new DirectoryInfo(SettingsProivider.GetBasePath).EnumerateDirectories()
+        static public void ShowProgressDir(IBaseModel baseModel) {
+            var outDir = baseModel.DataFilesDir.EnumerateDirectories()
                .Single(d => d.Name.ToLowerInvariant() == "processing").FullName;
             Process.Start("explorer.exe", outDir);
         }
