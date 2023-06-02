@@ -54,12 +54,21 @@ namespace Converter.Logic
             var result = new List<SourceFile>();
             foreach (var fps in supportedFPS)
             {
-
-                var files = BaseModel.DataFilesDir
+                var inputDir = BaseModel.DataFilesDir
                     .EnumerateDirectories()
-                    .SingleOrDefault(d => d.Name.ToLowerInvariant() == "input" + fps.ToString())
-                    ?.EnumerateFiles()
-                    .Select(f => new SourceFile() { Fps = fps, FileInfo = f });
+                    .SingleOrDefault(d => d.Name.ToLowerInvariant() == "input" + fps.ToString());
+                if (inputDir == null) { continue; }
+                var files = inputDir?.EnumerateFiles("*", SearchOption.AllDirectories)
+                    .Select(f => new SourceFile() { Fps = fps, FileInfo = f })
+                    .ToList();
+                foreach (var f in files) {
+                    var d = f.FileInfo.Directory;
+                    while (d.FullName != BaseModel.DataFilesDir.FullName) {
+                        f.DirPath.Add(d);
+                        d = d.Parent;
+                    }
+                    f.DirPath.Reverse();
+                }
                 if (files != null) {
                     result.AddRange(files);
                 }

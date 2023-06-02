@@ -6,6 +6,8 @@ using Converter.Basic;
 using Converter.Logic;
 using System.Windows;
 using System.Windows.Threading;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace Converter
 {
@@ -17,17 +19,29 @@ namespace Converter
         Failed,
         Corrupted,
         Unknown,
+        IsDirectory,
     }
 
     public class VideoFileVM : INotifyPropertyChanged
     {
+        private bool isNodeExpanded = true;
+        public bool IsNodeExpanded
+        {
+            get { return isNodeExpanded; }
+            set { isNodeExpanded = value; OnPropertyChanged(); }
+        }
+        public Visibility DetailsVisible { get => isDir ? Visibility.Collapsed : Visibility.Visible; }
+
+        public ObservableCollection<VideoFileVM> Children { get; set; } = new ObservableCollection<VideoFileVM>();
         private ConversionProcess conversion;
+        private bool isDir = false;
         private readonly FileInfo source;
-        private readonly int fps;
+        private readonly DirectoryInfo dir;
+        public int Fps { get; }
         private readonly ILogger logger;
 
         private bool inQueue;
-        public bool InQueue { get => inQueue; set { inQueue = value; OnPropertyChanged(nameof(InQueue)); } }
+        public bool InQueue { get => inQueue; set { SetInQueue(value); OnPropertyChanged(nameof(InQueue)); } }
         public bool IsSelected { get; set; }
         public FileStatus Status { get; set; }
         public TimeSpan? Duration { get; set; }
@@ -45,11 +59,20 @@ namespace Converter
         {
             conversion = conversionFactory.CreateConversionFor(source, fps, logger);
             this.source = source;
-            this.fps = fps;
+            this.Fps = fps;
+            OnPropertyChanged(nameof(Fps));
             this.logger = logger;
             ConvertCommand = new SimpleCommand(Convert);
             ToggleWindowCommand = new SimpleCommand(() => conversion.ToggleWindow());
             Refresh();
+        }
+
+        public VideoFileVM(DirectoryInfo source, ILogger logger)
+        {
+            this.logger = logger;
+            isDir = true;
+            Status = FileStatus.IsDirectory;
+            this.dir = source;
         }
 
         private void Convert()
@@ -144,9 +167,14 @@ namespace Converter
             }
         }
 
+        public string Name { get => ToString(); }
+
         public override string ToString()
         {
-            return $"{fps} -> {conversion.GetSourceFileInfo().Name}";
+            if (isDir) {
+                return dir.Name;
+            }
+            return $"{conversion.GetSourceFileInfo().Name}";
         }
 
         protected void OnPropertyChanged([CallerMemberName] string name = null)
@@ -156,13 +184,90 @@ namespace Converter
 
         internal bool Matches(FileInfo f)
         {
+            if (isDir) return false;
             return conversion.GetSourceFileInfo().FullName == f.FullName;
         }
 
         internal void ToggleInQueue()
         {
             InQueue = !InQueue;
-            OnPropertyChanged(nameof(InQueue));
+        }
+
+        internal void SetInQueue(bool b) {
+            inQueue = b;
+            foreach (var c in Children)
+            {
+                c.InQueue  = b;
+            }
+        }
+
+        internal bool TryFind(SourceFile f, out VideoFileVM match)
+        {
+            if (Matches(f.FileInfo))
+            {
+                match = this;
+                return true;
+            }
+            foreach (var c in Children){
+                if (c.TryFind(f, out match))
+                    return true;
+            }
+            match = null;
+            return false;
+        }
+
+        internal bool IsFor(DirectoryInfo dir)
+        {
+            return this.dir?.FullName == dir.FullName;
+        }
+
+        internal VideoFileVM GetNextReadyFile()
+        {
+            if (InQueue && Status == FileStatus.Found) {
+                return this;
+            }
+            foreach (var c in Children) {
+                var r = c.GetNextReadyFile();
+                if (r != null) return r;
+            }
+            return null;
+        }
+
+        internal int GetFilesCount()
+        {
+            var cnt = isDir ? 0 : 1;
+            return cnt + Children.ToList().Sum(c => c.GetFilesCount());
+        }
+
+        internal int GetActiveCount()
+        {
+            var cnt = Status == FileStatus.Running ? 1 : 0;
+            return cnt + Children.ToList().Sum(c => c.GetActiveCount());
+        }
+
+        internal TimeSpan GetActiveDuration()
+        {
+            var inQueueDuration = new TimeSpan();
+            if (Duration.HasValue && Status == FileStatus.Running)
+            {
+                inQueueDuration += Duration.Value;
+            }
+            return inQueueDuration + Children.Aggregate(new TimeSpan(), (a, b) => a + b.GetActiveDuration()); ;
+        }
+
+        internal decimal GetInQueueCount()
+        {
+            var cnt = InQueue && (Status == FileStatus.Running || Status == FileStatus.Found) ? 1 : 0;
+            return cnt + Children.ToList().Sum(c => c.GetInQueueCount());
+        }
+
+        internal TimeSpan GetInQueueDuration()
+        {
+            var inQueueDuration = new TimeSpan();
+            if (Duration.HasValue && InQueue && (Status == FileStatus.Running || Status == FileStatus.Found)) {
+                inQueueDuration += Duration.Value;
+            }
+            return inQueueDuration + Children.Aggregate(new TimeSpan(), (a, b) => a + b.GetInQueueDuration()); ;
         }
     }
 }

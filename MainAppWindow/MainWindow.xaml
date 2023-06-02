@@ -56,18 +56,40 @@
                     <Label Content="{Binding Summary, FallbackValue='Summary'}" Height="25" Width="auto"/>
                 </StackPanel>
             </StackPanel>
-            <ListView x:Name="FilesList" ItemsSource="{Binding Files}" Margin="10,25,0,10" PreviewKeyDown="FilesList_PreviewKeyDown">
-                <ListView.ItemContainerStyle>
+            <TreeView x:Name="FilesList" ItemsSource="{Binding Files}" Margin="10,25,0,10" PreviewKeyDown="FilesList_PreviewKeyDown">
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <Setter Property="IsExpanded" Value="{Binding IsNodeExpanded}"/>
+                    </Style>
+                </TreeView.ItemContainerStyle>
+                <TreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type localVm:VideoFileVM}" ItemsSource="{Binding Path=Children}">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox VerticalAlignment="Center" IsChecked="{Binding Path=InQueue}"/>
+                            <Label Content="{Binding Name}"/>
+                            <StackPanel Visibility="{Binding DetailsVisible}" Orientation="Horizontal">
+                                <Label Width="75" Content="{Binding Path=Fps}" ContentStringFormat="[{0}]"/>
+                                <Label Width="75" Content="{Binding Path=Duration}" ContentStringFormat='hh\\:mm\\ \\(ss\\)'/>
+                                <Label Width="75" Content="{Binding Status}"/>
+                                <ContentPresenter ContentTemplate="{StaticResource Actions}"></ContentPresenter>
+                                <Label Width="75" Content="{Binding Path=Start}"  ContentStringFormat='HH\:mm\(ss\)'/>
+                                <Label Width="75" Content="{Binding Path=Finish}" ContentStringFormat='HH\:mm\(ss\)'/>
+                                <Label Width="75" Content="{Binding Path=Took}"   ContentStringFormat='HH\:mm\(ss\)'/>
+                            </StackPanel>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.Resources>
+                <!--<TreeView.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
                         <Setter Property="IsSelected" Value="{Binding IsSelected}" />
                     </Style>
-                </ListView.ItemContainerStyle>
-                <ListView.View>
+                </TreeView.ItemContainerStyle>-->
+                <!--<TreeView.View>
                     <GridView>
                         <GridViewColumn Header=" ">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <CheckBox IsChecked="{Binding Path=InQueue}"/>
+                                    
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
@@ -79,8 +101,8 @@
                         <GridViewColumn Header="Finish" DisplayMemberBinding="{Binding Path=Finish, StringFormat=HH\\:mm\\(ss\\) dd\\-MM\\-yyyy}" Width="75"/>
                         <GridViewColumn Header="Took" DisplayMemberBinding="{Binding Path=Took, StringFormat=hh\\:mm\\ \\(ss\\)}" Width="75"/>
                     </GridView>
-                </ListView.View>
-            </ListView>
+                </TreeView.View>-->
+            </TreeView>
         </Grid>
         <GridSplitter Grid.Row="2" Grid.Column="0"
                   Margin="5,0,5,0"

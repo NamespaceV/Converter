@@ -5,7 +5,9 @@ using Converter.Windows;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -16,7 +18,7 @@ namespace Converter
     {
         private IconSwitcher switcher;
 
-        public List<VideoFileVM> Files { get; set; } = new List<VideoFileVM>();
+        public ObservableCollection<VideoFileVM> Files { get; set; } = new ObservableCollection<VideoFileVM>();
 
         public string Logs { get; set; } = "";
         public string Summary { get; set; }
@@ -138,44 +140,75 @@ namespace Converter
         private void RefreshList()
         {
             UpdateFilterDir();
-            var newFiles = new List<VideoFileVM>();
+            var newFiles = new ObservableCollection<VideoFileVM>();
             var oldFiles = Files;
-            foreach (var f in FileLister.ListFiles())
+
+            var filesList = FileLister.ListFiles();
+            foreach (var f in filesList)
             {
-                var match = oldFiles.Find(of => of.Matches(f.FileInfo));
+                VideoFileVM match = null;
+                foreach (var init in oldFiles) {
+                    if (init.TryFind(f, out match)){
+                        break;
+                    }
+                }
                 if (match != null)
                 {
-                    newFiles.Add(match);
                     match.Refresh();
+                    Add(newFiles, match, f.DirPath);
                 }
                 else
                 {
-                    newFiles.Add(new VideoFileVM(ConversionFactory, f.FileInfo, f.Fps, this));
+                    var newvfVM = new VideoFileVM(ConversionFactory, f.FileInfo, f.Fps, this);
+                    newvfVM.PropertyChanged -= (o, e) => UpdateSummary();
+                    newvfVM.PropertyChanged += (o, e) => UpdateSummary();
+                    Add(newFiles, newvfVM, f.DirPath);
                 }
             }
             Files = newFiles;
-            foreach (var f in newFiles) {
-                f.PropertyChanged += (o, e) => UpdateSummary();
-            }
             RaisePropertyChanged(nameof(Files));
             UpdateSummary();
         }
 
+        private void Add(ObservableCollection<VideoFileVM> files, VideoFileVM match, List<DirectoryInfo> dirs)
+        {
+            foreach (var dir in dirs) {
+                var dVM = files.ToList().Find(vm => vm.IsFor(dir));
+                if (dVM == null) {
+                    dVM = new VideoFileVM(dir, this);
+                    files.Add(dVM);
+                }
+                files = dVM.Children;
+            }
+            files.Add(match);
+        }
+
         private void UpdateSummary()
         {
-            int activeCount = Files.Count(f => f.Status == FileStatus.Running);
-            var inQueue = Files.Where(f => f.InQueue && (f.Status == FileStatus.Running || f.Status == FileStatus.Found));
+            var total = Files.Sum(f => f.GetFilesCount());
+
+            int activeCount = Files.Sum(f => f.GetActiveCount());
+            var activeDuration = Files.Aggregate(new TimeSpan(), (a, b) => a + b.GetActiveDuration());
+
+            var inQueue = Files.Sum(f => f.GetInQueueCount());
+            var inQueueDuration = Files.Aggregate(new TimeSpan(), (a, b) => a + b.GetInQueueDuration());
 
             Summary =
-                  $"{Files.Count} files -> {Files.Select(f => f.Duration ?? new TimeSpan()).Aggregate(new TimeSpan(), (a, b) => a.Add(b)).ToString("hh\\:mm\\ \\(ss\\)")} total length"
-                + $" || In queue {inQueue.Count()} -> {inQueue.Select(f => f.Duration  ?? new TimeSpan()).Aggregate(new TimeSpan(), (a, b) => a.Add(b)).ToString("hh\\:mm\\ \\(ss\\)")} total length"
-                + $" || Running: {activeCount}";
+                  $"{total} files total"
+                + $" || In queue {inQueue} -> {inQueueDuration.ToString("hh\\:mm\\ \\(ss\\)")} total length"
+                + $" || Running: {activeCount} -> {activeDuration.ToString("hh\\:mm\\ \\(ss\\)")} total length";
             switcher?.SetActiveIcon(activeCount > 0);
             if (QueueActive && activeCount == 0) {
-                var next = Files.FirstOrDefault(f => f.InQueue && f.Status == FileStatus.Found);
+                var next = FindNextReadyFileVM();
                 next?.ConvertCommand.Execute(null);
             }
             RaisePropertyChanged(nameof(Summary));
+        }
+
+        private VideoFileVM FindNextReadyFileVM()
+        {
+            var f = Files.FirstOrDefault(f => f.GetNextReadyFile() != null);
+            return f?.GetNextReadyFile();
         }
 
         public void Log(string s)
