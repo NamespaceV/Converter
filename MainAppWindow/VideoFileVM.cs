@@ -7,7 +7,7 @@ using Converter.Logic;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace Converter.ViewModels
+namespace Converter
 {
     public enum FileStatus
     {
@@ -27,7 +27,7 @@ namespace Converter.ViewModels
         private readonly ILogger logger;
 
         private bool inQueue;
-        public bool InQueue { get => inQueue; set { inQueue = value; OnPropertyChanged(nameof(InQueue)); }}
+        public bool InQueue { get => inQueue; set { inQueue = value; OnPropertyChanged(nameof(InQueue)); } }
         public bool IsSelected { get; set; }
         public FileStatus Status { get; set; }
         public TimeSpan? Duration { get; set; }

@@ -10,7 +10,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 
-namespace Converter.ViewModels
+namespace Converter
 {
     public class MainWindowVM : BindableBase, ILogger
     {
@@ -30,7 +30,6 @@ namespace Converter.ViewModels
             }
         }
         public string WorkingBasePath { get; set; }
-        public string FFMpegParams { get; set; }
         public ICommand AddFilesCommand { get; private set; }
         public ICommand SetParamsCommand { get; private set; }
         public ICommand RefreshCommand { get; private set; }
@@ -113,14 +112,15 @@ namespace Converter.ViewModels
 
         private void SetParams()
         {
-            var d = new FfmpegParamsWindow(FFMpegParams);
+            var curArgs = BaseModel.ConversionCommandParamsBuilder().args;
+            var defArgs = BaseModel.ConversionCommandParamsBuilder().DefArgs();
+            var d = new FfmpegParamsWindow(curArgs, defArgs);
             var r = d.ShowDialog();
             if (r != true)
             {
                 return;
             }
-            FFMpegParams = d.Result;
-            BaseModel.ConversionCommandParamsBuilder = () => new CustomParamsBuilder(FFMpegParams);
+            BaseModel.ConversionCommandParamsBuilder().args = d.Result;
         }
 
         private void UpdateFilterDir()

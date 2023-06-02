@@ -1,5 +1,4 @@
-﻿using Converter.ViewModels;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,7 +18,7 @@ namespace Converter.Windows
     {
         private readonly MainWindowVM mainWindowVM;
 
-        public TakeTopXPopup(ViewModels.MainWindowVM mainWindowVM)
+        public TakeTopXPopup(MainWindowVM mainWindowVM)
         {
             InitializeComponent();
             this.mainWindowVM = mainWindowVM;

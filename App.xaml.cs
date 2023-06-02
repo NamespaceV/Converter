@@ -1,5 +1,4 @@
 ﻿using Converter.Logic;
-using Converter.ViewModels;
 using Prism.Ioc;
 using Prism.Unity;
 using System.Windows;

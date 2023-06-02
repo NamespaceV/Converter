@@ -67,6 +67,7 @@ namespace Converter.Logic
                 .SetInputFile(sourceFI.FullName)
                 .SetOutputFile(GetProcessingFileInfo().FullName)
                 .Build();
+            logger.Log($">> {binaryPath.FullName} {args}");
             var info = new ProcessStartInfo(binaryPath.FullName, args);
             info.UseShellExecute = true;
             info.WindowStyle = ProcessWindowStyle.Hidden;
