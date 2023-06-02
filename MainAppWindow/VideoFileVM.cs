@@ -269,5 +269,36 @@ namespace Converter
             }
             return inQueueDuration + Children.Aggregate(new TimeSpan(), (a, b) => a + b.GetInQueueDuration()); ;
         }
+
+        /// <summary>
+        /// returns number of active files in the subtree after the operation
+        /// </summary>
+        /// <param name="cnt"></param>
+        /// <returns></returns>
+        internal int TakeTop(int cnt)
+        {
+            if (cnt == 0) {
+                InQueue = false;
+                return 0;
+            }
+            var f = GetFilesCount();
+            if (f <= cnt)
+            {
+                InQueue = true;
+                return f;
+            }
+            if (!isDir) {
+                InQueue = true;
+                return 1;
+            }
+            var r = 0;
+            foreach (var c in Children)
+            {
+                var a = c.TakeTop(cnt);
+                cnt -= a;
+                r += a;
+            }
+            return r;
+        }
     }
 }

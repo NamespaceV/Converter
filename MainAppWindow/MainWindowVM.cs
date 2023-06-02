@@ -250,8 +250,9 @@ namespace Converter
 
         internal void TakeTop(int cnt)
         {
-            foreach (var f in Files.Take(cnt)) { f.InQueue = true; }
-            foreach (var f in Files.Skip(cnt)) { f.InQueue = false; }
+            foreach (var f in Files) {
+                cnt -= f.TakeTop(cnt);
+            }
         }
     }
 }
